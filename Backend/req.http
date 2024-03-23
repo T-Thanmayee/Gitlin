@@ -1,0 +1,39 @@
+post http://localhost:4000/postinfo/newpost
+Content-Type: application/json
+
+{
+    "username":"ravi234",
+    "profileIcon":"imagenotthere",
+    "designation":"full stack developer",
+    "description":{
+        "text":"i dont no why i am doing",
+        "images":[],
+        "videos":"",
+        "linkProject":"",
+        "likes":"",
+        "comments":[]
+    }
+}
+###
+
+post http://localhost:4000/projectinfo/newproject
+Content-Type: application/json
+
+{   "projectId":"{{$timestamp}}",
+    "username":"ravi234",
+    "projectName":"waste",
+    "status":true,
+    "access":true,
+    "private":true,
+    "branches":[{}],
+    "mentor":""
+
+    
+}
+
+
+###
+get http://localhost:4000/usersinfo/userproject/ravi234
+
+###
+get http://localhost:4000/projectinfo/getprojects

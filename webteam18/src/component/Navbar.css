@@ -1,0 +1,18 @@
+.container-fluid{
+    padding: 20px;
+    font-size: 20px;
+    
+}
+.navbar-nav{
+    display:flex;
+    gap:30px;
+    
+}
+a:hover{    
+    background-color:rgba(9, 74, 124, 0.564);
+    padding:10px;
+
+}
+.form-control{
+    width:60%;
+}
