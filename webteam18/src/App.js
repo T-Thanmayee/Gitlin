@@ -1,11 +1,11 @@
-import './App.css';
+
 import ImgMediaCard from './component/ImgMediaCard'; 
 import RouteLayout from './component/RouteLayout';
 import Home from './component/Home'
 import Footer from './component/Footer';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
 import Error1 from './component/Error1';
-import StudentProfile from './component/StudentProfile';
+import Fileupload from './component/Fileupload';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import RecipeReviewCard from './component/HomeCard';
 import HomeList from './component/HomeList';
@@ -21,7 +21,16 @@ function App() {
                  {
                    path:'',
                    element:<HomeList/>
+                },
+                {
+                  path:'project',
+                  element:<ImgMediaCard/>
+                },
+                {
+                  path:'createProject',
+                  element:<Fileupload/>
                 }
+                
               ]
     }
   ])

@@ -34,7 +34,7 @@ export default function RecipeReviewCard() {
   };
 
   return (
-    <div className='row w-50 mx-auto'>
+    <div className='row w-50 mx-auto container mt-5'>
     <Card  className='col-12 m-4 mx-auto'>
       <CardHeader
         avatar={

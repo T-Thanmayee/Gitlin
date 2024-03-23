@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import './ImgMediaCard.css'
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import axios from "axios"
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 export default function ImgMediaCard() {
   let [projects,setprojects]=useState([])
   let [err,setErr]=useState('')
+  let navigate=useNavigate()
 
   useEffect(async()=>{
      let data=await axios.get('http://localhost:4000/projectinfo/getprojects')
@@ -16,18 +17,21 @@ export default function ImgMediaCard() {
      if(data.data.message=='done')
      {
       setprojects([...data.data.data])
+      console.log(data.data.data)
      }
      else{
       setErr("i dont know about the error")
      }
   },[])
   console.log(projects)
+
   return (
-    <div>
+    <div className='row g-5 mt-5 container mx-auto'>
+      <button className='btn btn-primary float-end w-25 display-4' onClick={()=>{navigate('/createProject')}}>Create a Project</button>
       {
    projects.map((project)=>
-   
-    <Card className="card" sx={{ maxWidth: 345 }}>
+   <div className='col-lg-3 col-1'>
+    <Card className="card" sx={{ maxWidth: 345 ,minHeight:'300px'}}>
     <CardMedia
       component="img"
       alt="green iguana"
@@ -41,9 +45,13 @@ export default function ImgMediaCard() {
       <Typography variant="body2" color="text.secondary">
        {project.username}
       </Typography>
+      <Typography variant="body2" color="text.secondary">
+       {project.description}
+      </Typography>
+  
     </CardContent>
   </Card>
-   
+  </div>
    )
   }
    </div>

@@ -8,7 +8,7 @@ function RouteLayout() {
   return (
     <div>
         <Navbar  />
-        <div style={{minaHeight:'85vh'}}>
+        <div style={{minHeight:'95vh'}}>
         <Outlet />
         </div>
         

@@ -19,17 +19,29 @@ Content-Type: application/json
 post http://localhost:4000/projectinfo/newproject
 Content-Type: application/json
 
-{   "projectId":"{{$timestamp}}",
-    "username":"ravi234",
-    "projectName":"waste",
-    "status":true,
-    "access":true,
-    "private":true,
+{    
+    "projectId": "2024-03-23T11:50:00.006Z",
+    "username": "web_developer",
+    "projectName": "Blog Platform",
+    "description": "A platform for sharing content and stories",
+    "status": true,
+    "private": false
+,
+
     "branches":[{}],
-    "mentor":""
+    "mentor":"",
+    "Files":[
+        {
+            "nameOfFile":"",
+            "data":""
+        }
+    ]
 
     
 }
+
+###
+post http://localhost:4000/tutorials/newtutorial
 
 
 ###
