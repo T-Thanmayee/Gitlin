@@ -42,8 +42,26 @@ Content-Type: application/json
 
 ###
 post http://localhost:4000/tutorials/newtutorial
+Content-Type: application/json
+
+{
+        
+  "name": "Food Photography",
+        "domain": "Culinary Arts",
+        "trainer": "Photographer Laura Miller",
+        "paid": false,
+        "status": true,
+        "certificate": "Food Photography Mastery",
+        "link": "https://www.youtube.com/food-photography",
+        "description": "Learn how to capture stunning images of food with professional photography techniques."
 
 
+}
+
+
+
+###
+get http://localhost:4000/tutorials/alltutorials
 ###
 get http://localhost:4000/usersinfo/userproject/ravi234
 

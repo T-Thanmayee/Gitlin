@@ -1,20 +1,21 @@
 import './Register.css'
 import {useForm} from 'react-hook-form'
 import { useState } from 'react'
-
+import axios from 'axios'
 function Register(){
     //state
     let [userInfo,setUserInfo]=useState({})
     let [showInfo,setShowInfo]=useState(false)
+    let [err,setErr]=useState('')
 
     let {register,handleSubmit,formState:{errors}}=useForm()
 
-    async()=>{
-        let data=await axios.get('http://localhost:4000/projectinfo/getprojects')
-        console.log(data.data)
+    async function displayUserDetails(data1){
+        let data=await axios.post('http://localhost:4000/usersinfo/newuser',data1)
+        console.log(data)
         if(data.data.message=='done')
         {
-         setprojects([...data.data.data])
+         
          console.log(data.data.data)
         }
         else{
@@ -30,18 +31,15 @@ function Register(){
             <form className='d-flex flex-wrap' onSubmit={handleSubmit(displayUserDetails)}>
                 <h1 className='display-6 w-100 mb-5 mt-2'>Registration Form</h1>
                 <div className='form-group me-5 mb-4'>
-                    <label htmlFor="firstName" className='form-label' >First Name</label>
-                    <input type="text" className='form-control bg-light' id="firstName" autoComplete='off' {...register('firstName',{required:true,minLength:4,maxLength:6})}/>
-                    {errors.firstName?.type==='required' && <p className='text-danger lead'>First Name is required</p>}
-                    {errors.firstName?.type==='minLength' && <p className='text-warning lead'>Atleast 4 characters</p>}
-                    {errors.firstName?.type==='maxLength' && <p className='text-warning lead'>Atmost 6 characters</p>}
-                </div>
-                <div className='form-group mb-4'>
-                    <label htmlFor="lastName" className='form-label' >Last Name</label>
-                    <input type="text" className='form-control bg-light' id="lastName" autoComplete='off'{...register('lastName',{required:true,minLength:4,maxLength:6})}/>
-                    {errors.lastName?.type==='required' && <p className='text-danger lead'>Last Name is required</p>}
-                    {errors.lastName?.type==='minLength' && <p className='text-warning lead'>Atleast 4 characters</p>}
-                    {errors.lastName?.type==='maxLength' && <p className='text-warning lead'>Atmost 6 characters</p>}
+                    <label htmlFor="username" className='form-label' >Username</label>
+                    <input type="text" className='form-control bg-light' id="username" autoComplete='off' {...register('username',{required:true})}/>
+                    {errors.username?.type==='required' && <p className='text-danger lead'>First Name is required</p>}
+                    </div>
+                <div className=' mb-4 w-100'>
+                    <label htmlFor="password" className='form-label' >Password</label>
+                    <input type="password" className='form-control bg-light' id="password" autoComplete='off' {...register('password',{required:true})}/>
+                    {errors.password?.type==='required' && <p className='text-danger lead'>Password is required</p>}
+                    
                 </div>
                 <div className='form-group me-5 mb-4'>
                     <label htmlFor="birthday" className='form-label' >Birthday</label>
@@ -73,16 +71,15 @@ function Register(){
                     {errors.phone?.type==='maxLength' && <p className='text-warning lead'>Phone Number is 10 digits</p>}
 
                 </div>
-                <div className='form-group mb-4 w-100'>
-                    <label htmlFor="subject" className='form-label' >Subject</label>
-                    <select id="subject" className='form-select bg-light' defaultValue={""} {...register('subject',{required:true})} >
-                        <option value="math">Mathematics</option>
-                        <option value="java">Java</option>
-                        <option value="dbms">DataBase Management System</option>
-                        <option value="dld">Digital Logic Design</option>
-                        <option value="" disabled>Choose Option</option>
-                    </select>
-                    {errors.subject?.type==='required' && <p className='text-danger lead'>Subject is required</p>}
+                <div className='form-group me-5 mb-4'>
+                    <label htmlFor="linkedin" className='form-label' >LinkedIn</label>
+                    <input type="text" className='form-control bg-light' id="linkedin" autoComplete='off' {...register('linkedin')}/>
+                    
+                </div>
+                <div className='form-group mb-4'>
+                    <label htmlFor="github" className='form-label' >GitHub</label>
+                    <input type="text" className='form-control bg-light' id="github" autoComplete='off' {...register('github')}/>
+
                 </div>
                 <button type="submit" className='btn btn-primary w-25 mt-3'>Submit</button>
             </form>

@@ -21,6 +21,7 @@ usersInfo.post('/newuser',eah(
         const newuser=req.body;
         console.log(newuser)
         const dbuser=await usersinfo.findOne({username:newuser.username})
+        console.log(dbuser,"why not coming")
         if(dbuser!==null)
         {
             res.send({message:"enter correct username already exist"})

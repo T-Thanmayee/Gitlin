@@ -11,8 +11,11 @@ export default function ImgMediaCard() {
   let [err,setErr]=useState('')
   let navigate=useNavigate()
 
-  useEffect(async()=>{
-     let data=await axios.get('http://localhost:4000/projectinfo/getprojects')
+  useEffect(()=>{
+  change1()
+  },[])
+  async function change1(){
+    let data=await axios.get('http://localhost:4000/projectinfo/getprojects')
      console.log(data.data)
      if(data.data.message=='done')
      {
@@ -22,12 +25,14 @@ export default function ImgMediaCard() {
      else{
       setErr("i dont know about the error")
      }
-  },[])
-  console.log(projects)
+  }
+      function change(){
+    navigate('/Fileupload')
+  }
 
   return (
     <div className='row g-5 mt-5 container mx-auto'>
-      <button className='btn btn-primary float-end w-25 display-4' onClick={()=>{navigate('/createProject')}}>Create a Project</button>
+      <button className='btn btn-primary float-end w-25 display-4' onClick={change}>Create a Project</button>
       {
    projects.map((project)=>
    <div className='col-lg-3 col-1'>

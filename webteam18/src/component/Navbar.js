@@ -14,14 +14,14 @@ function Navbar() {
                     <div className="navbar-nav text-white">
                         <NavLink className="nav-link text-white active" aria-current="page" to="/">Home</NavLink>
                         <NavLink className="nav-link text-white" to="project">Create project</NavLink>
-                        <NavLink className="nav-link text-white" to="">Tutorial</NavLink>
+                        <NavLink className="nav-link text-white" to="tutorials">Tutorial</NavLink>
                         <NavLink className="nav-link text-white" to="">Mentoring</NavLink>
                         <a className="nav-link text-white" href="https://mediafiles.botpress.cloud/aa76ca6f-317c-40f8-9fac-568d41b721c9/webchat/bot.html" target='_blank'>Chat</a>
                         <form className="d-flex" role="search">
                             <input className="form-control me-2 ms-5" type="search" placeholder="Search" aria-label="Search" />
                         </form><br/>
                         <NavLink className="sign text-white" to="register">SignUp</NavLink>
-                        <NavLink className="sign text-white" to="register">SignIn</NavLink>
+                        <NavLink className="sign text-white" to="login">SignIn</NavLink>
 
                     </div>
                     </div>
