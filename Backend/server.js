@@ -20,7 +20,7 @@ app.use(exp.json())
 //when we want to get component through the url path
 
 mongoclient.connect(a)
-.then((client)=>{console.log("webs erver connected to database")
+.then((client)=>{console.log("web server connected to database")
 const webdb=client.db('webdb')
 const usersinfo=webdb.collection('usersinfo')
 const postinfo=webdb.collection('postinfo')
@@ -60,4 +60,4 @@ app.use((req,res,next)=>{
     res.send({message:err.message})
 })
 
-app.listen(port,()=>console.log(` web server is running ${port}`))
+app.listen(port,()=>console.log(`web server is running on port ${port}`))
