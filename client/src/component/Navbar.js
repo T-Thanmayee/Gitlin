@@ -1,111 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import { FaBars, FaTimes, FaHome } from 'react-icons/fa'; // Import icons
 import { NavLink } from 'react-router-dom';
-import { FaBars, FaTimes, FaUser, FaShoppingCart, FaSignOutAlt } from 'react-icons/fa';
-import { GiAmpleDress } from 'react-icons/gi';
-import './Navbar.css'
-import { useSelector, useDispatch } from 'react-redux';
-import { resetState } from '../../Redux/slices/UserFarmerLoginThunk';
-import { useNavigate } from 'react-router-dom';
-import Profile from '../profile/Profile';
+import { useState } from 'react';
 
 const Navbar = () => {
   const [showNavbar, setShowNavbar] = useState(false);
-  let [showProfile, setShowProfile] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const isLoggedIn = useSelector((state) => state.userFarmer.loginStatus);
-  const currentUser = useSelector((state) => state.userFarmer.currentUser);
-
-  
-
-  const checkLoginStatus = () => {
-    if (isLoggedIn) {
-      setShowProfile(true);
-    }
-  };
 
   const handleShowNavbar = () => {
     setShowNavbar((prevState) => !prevState);
   };
- 
-  const handleUserIconClick = () => {
-    if (!isLoggedIn) {
-      navigate('/login');
-    } else {
-      setShowProfile((prevState) => !prevState);
-      console.log('showProfile', showProfile);
-    }
-  };
-  const handleRemoveProfile = () => {
-    setShowProfile(false);
-    console.log('Profile removed, showProfile:', false);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.clear();
-    localStorage.clear();
-    dispatch(resetState());
-    navigate('/login');
-  };
 
   return (
-    <nav className="navbar">
-      <div className="container">
-        <div className="first-icons d-flex align-items-center" style={{ justifyContent: 'space-between' }}>
-          <div className="logo m-2">
-            <GiAmpleDress size={50} />
-          </div>
-        </div>
-
-        <div className={`nav-elements ${showNavbar ? 'active' : ''}`}>
-          <ul>
-            <li>
-              <NavLink to="/home">Home</NavLink>
-            </li>
-            <li>
-              <NavLink to="/about">About</NavLink>
-            </li>
-            <li>
-              <NavLink to="/new-arrivals">New Arrivals</NavLink>
-             
-            </li>
-            <li>
-              <NavLink to="/clothing">Clothing</NavLink>
-              
-            </li>
-          </ul>
-        </div>
-
-        <div className="actions d-flex" style={{ marginLeft: 'auto' }}>
-          <div className="cart m-3">
-            <FaShoppingCart style={{ fontSize: '24px' }} />
-          </div>
-          <div className="profile m-3" >
-            <FaUser style={{ fontSize: '24px', cursor: 'pointer' }} onClick={checkLoginStatus} />
-            {isLoggedIn && showProfile && (
-              <div className={`profile-container ${showProfile ? 'show' : ''}`}>
-                <FaTimes
-                  className='d-block mx-auto mb-2'
-                  size={25}
-                  style={{ cursor: 'pointer', color: '#28a745', marginTop: '10px' }}
-                  onClick={ handleRemoveProfile}
-                />
-                <Profile />
-                <div className='d-flex justify-content-around'>
-                  <FaSignOutAlt
-                    size={25}
-                    style={{ cursor: 'pointer', color: '#28a745', marginTop: '10px' }}
-                    onClick={handleLogout}
-                  />
-                  <p style={{ marginTop: '10px' }}>LogOut</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="menu-icon m-3" onClick={handleShowNavbar}>
-          {showNavbar ? <FaTimes size={30} /> : <FaBars size={30} />}
-        </div>
+    <nav className="h-16 bg-[#fef7e5] flex justify-between items-center px-5 relative z-10">
+      <div className="flex items-center">
+        <FaHome size={40} className="text-[#574c4c]" />
+      </div>
+      <div
+        className="menu-icon md:hidden cursor-pointer z-20"
+        onClick={handleShowNavbar}
+      >
+        {showNavbar ? <FaTimes size={30} /> : <FaBars size={30} />}
+      </div>
+      <div
+        className={`absolute top-16 right-0 bg-[#fef7e5] transition-all duration-300 ease-in-out overflow-hidden z-10 md:static md:bg-transparent md:flex md:w-auto ${
+          !showNavbar ? 'w-[270px] h-[calc(100vh-60px)]' : 'w-0 h-0'
+        }`}
+      >
+        <ul className="flex flex-col md:flex-row md:items-center md:space-x-14 p-5 md:p-0">
+          <li>
+            <NavLink
+              to="/"
+              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
+              activeClassName="text-[#574c4c] font-medium"
+            >
+              Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/blog"
+              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
+              activeClassName="text-[#574c4c] font-medium"
+            >
+              Blog
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/projects"
+              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
+              activeClassName="text-[#574c4c] font-medium"
+            >
+              Projects
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/about"
+              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
+              activeClassName="text-[#574c4c] font-medium"
+            >
+              About
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/contact"
+              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
+              activeClassName="text-[#574c4c] font-medium"
+            >
+              Contact
+            </NavLink>
+          </li>
+        </ul>
       </div>
     </nav>
   );

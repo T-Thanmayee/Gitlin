@@ -2,7 +2,6 @@ import ImgMediaCard from './component/ImgMediaCard';
 import RouteLayout from './component/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
 import Fileupload from './component/Fileupload';
-import 'bootstrap/dist/css/bootstrap.min.css'
 import HomeList from './component/HomeList';
 import Register from './component/Register';
 import Login from './component/Login';
