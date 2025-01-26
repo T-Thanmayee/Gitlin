@@ -1,78 +1,58 @@
-import { FaBars, FaTimes, FaHome } from 'react-icons/fa'; // Import icons
-import { NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import React, { useState } from "react";
 
 const Navbar = () => {
-  const [showNavbar, setShowNavbar] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
-  const handleShowNavbar = () => {
-    setShowNavbar((prevState) => !prevState);
+  const toggleNav = () => {
+    setIsNavOpen(!isNavOpen);
   };
 
   return (
-    <nav className="h-16 bg-[#fef7e5] flex justify-between items-center px-5 relative z-10">
-      <div className="flex items-center">
-        <FaHome size={40} className="text-[#574c4c]" />
-      </div>
+    <nav className="bg-gray-800 text-white flex items-center justify-between px-6 py-4 z-10 sticky top-0">
+      {/* Logo */}
+      <div className="text-xl font-bold">MyLogo</div>
+
+      {/* Hamburger Toggle Button */}
       <div
-        className="menu-icon md:hidden cursor-pointer z-20"
-        onClick={handleShowNavbar}
+        className="flex flex-col justify-between h-6 w-8 cursor-pointer md:hidden"
+        onClick={toggleNav}
       >
-        {showNavbar ? <FaTimes size={30} /> : <FaBars size={30} />}
+        <span
+          className={`h-1 bg-white rounded transition-transform duration-300 ${
+            isNavOpen ? "transform rotate-45 translate-y-2" : ""
+          }`}
+        ></span>
+        <span
+          className={`h-1 bg-white rounded transition-opacity duration-300 ${
+            isNavOpen ? "opacity-0" : ""
+          }`}
+        ></span>
+        <span
+          className={`h-1 bg-white rounded transition-transform duration-300 ${
+            isNavOpen ? "transform -rotate-45 -translate-y-2" : ""
+          }`}
+        ></span>
       </div>
-      <div
-        className={`absolute top-16 right-0 bg-[#fef7e5] transition-all duration-300 ease-in-out overflow-hidden z-10 md:static md:bg-transparent md:flex md:w-auto ${
-          !showNavbar ? 'w-[270px] h-[calc(100vh-60px)]' : 'w-0 h-0'
+
+      {/* Navigation Links */}
+      <ul
+        className={`fixed top-16 right-0 bg-gray-800 w-full flex flex-col items-center transition-transform duration-300 md:static md:flex-row md:w-auto md:space-x-6 md:transform-none ${
+          isNavOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
         }`}
       >
-        <ul className="flex flex-col md:flex-row md:items-center md:space-x-14 p-5 md:p-0">
-          <li>
-            <NavLink
-              to="/"
-              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
-              // activeClassName="text-[#574c4c] font-medium"
-            >
-              Home
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/blog"
-              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
-              //activeClassName="text-[#574c4c] font-medium"
-            >
-              Blog
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/projects"
-              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
-              //activeClassName="text-[#574c4c] font-medium"
-            >
-              Projects
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/about"
-              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
-              //activeClassName="text-[#574c4c] font-medium"
-            >
-              About
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/contact"
-              className="text-[#2f234f] text-sm font-normal transition-colors hover:text-[#574c4c]"
-              //activeClassName="text-[#574c4c] font-medium"
-            >
-              Contact
-            </NavLink>
-          </li>
-        </ul>
-      </div>
+        <li className="py-2 md:py-0 hover:underline">
+          <a href="#">Home</a>
+        </li>
+        <li className="py-2 md:py-0 hover:underline">
+          <a href="#">About</a>
+        </li>
+        <li className="py-2 md:py-0 hover:underline">
+          <a href="#">Services</a>
+        </li>
+        <li className="py-2 md:py-0 hover:underline">
+          <a href="#">Contact</a>
+        </li>
+      </ul>
     </nav>
   );
 };
