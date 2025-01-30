@@ -2,11 +2,12 @@ import ImgMediaCard from './components/ImgMediaCard';
 import RouteLayout from './components/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
 import Fileupload from './components/Fileupload';
-import HomeList from './components/HomeList';
-import Register from './components/Register';
-import Login from './components/Login';
-import StudentProfile from './components/StudentProfile';
-import Tutorials from './components/tutorials';
+
+import Register from './components/Register/Register';
+import Login from './components/Login/Login';
+import StudentProfile from './components/ProfileUser/StudentProfile';
+import Tutorials from './components/Tutorials/tutorials';
+import HomeList from './components/Home/HomeList';
 
 function App() {
   let router=createBrowserRouter([

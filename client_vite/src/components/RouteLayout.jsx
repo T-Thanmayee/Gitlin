@@ -1,8 +1,8 @@
 import React from 'react'
-import Navbar from './Navbar'
-import Footer from './Footer'
+import Navbar from './FooterAndNav/Navbar'
+import Footer from './FooterAndNav/Footer'
 import {Outlet} from 'react-router-dom'
-import RecipeReviewCard from './HomeCard'
+import RecipeReviewCard from './Home/HomeCard'
 
 function RouteLayout() {
   return (
