@@ -1,10 +1,10 @@
 import React from 'react';
-
+//animate-fade-left animate-once animate-duration-[1500ms] animate-delay-1000 animate-ease-in animate-normal animate-fill-forwards
 const FeatureCard = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mt-10">
       {/* Card 1 */}
-      <div className="animate-fade-left p-4">
+      <div className=" animate-fade-right animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
@@ -29,7 +29,7 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 2 */}
-      <div className=" animate-fade-right p-4">
+      <div className=" animate-fade-left animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards  p-4">
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
@@ -54,7 +54,7 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 3 */}
-      <div className=" animate-fade-left p-4">
+      <div className="  animate-fade-right animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
@@ -79,7 +79,7 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 4 */}
-      <div className="animate-fade-right p-4">
+      <div className=" animate-fade-left animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">

@@ -65,7 +65,7 @@ function CountView() {
   }, []);
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+    <div className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 my-10 ">
       <div
         id="fullWidthTabContent"
         className="border-t border-gray-200 dark:border-gray-600"
@@ -76,7 +76,7 @@ function CountView() {
           role="tabpanel"
           aria-labelledby="stats-tab"
         >
-          <dl className="grid max-w-screen-xl grid-cols-2 gap-8 p-4 mx-auto text-gray-900 sm:grid-cols-3 xl:grid-cols-4 dark:text-white sm:p-8">
+          <dl className="grid max-w-screen-xl grid-cols-2 gap-8 p-4 mx-auto text-gray-900  xl:grid-cols-4 dark:text-white sm:p-8">
             <div className="flex flex-col items-center justify-center">
               <dt className="mb-2 text-3xl font-extrabold">
                 {Math.floor(counts.projects)}
