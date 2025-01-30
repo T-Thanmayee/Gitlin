@@ -11,23 +11,23 @@ import {
 
 function HomeCarousel() {
   return (
-    <div className='flex justify-center'>
-         <Carousel className="w-fit" > 
+    <div className='w-screen mt-3'>
+         <Carousel className="" > 
       <CarouselContent >
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index} className="basis-full">
             <div className="p-1">
-              <Card className="">
-                <CardContent className="flex aspect-square items-center justify-center p-6 ">
-                  <span className="text-4xl font-semibold">{index + 1}</span>
+              <Card className="w-full h-[500px]">
+                <CardContent className="flex flex-col items-center justify-end p-6 h-full" style={{backgroundImage: `url(https://wallpapers.com/images/hd/good-background-iegpv34e167xjt5i.jpg)`}}>
+                  <span className="text-4xl font-semibold text-black text-center z-10 ">{index + 1}</span>
                 </CardContent>
               </Card>
             </div>
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      <CarouselPrevious className="left-10 text-black"/>
+      <CarouselNext className="right-10 text-black"/>
     </Carousel>
     </div>
   )
