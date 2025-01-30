@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import HomeCarousel from './HomeCarousel';
 
 const App = () => {
   return (
-    <div>
-      
+    <div className='w-screen'>
+    <HomeCarousel />
     </div>
   );
 };
