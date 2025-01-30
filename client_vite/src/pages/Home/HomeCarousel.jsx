@@ -11,14 +11,14 @@ import {
 
 function HomeCarousel() {
   return (
-    <div className='w-[800px]'>
-         <Carousel className="" > 
+    <div className='flex justify-center'>
+         <Carousel className="w-fit" > 
       <CarouselContent >
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index} className="basis-full">
             <div className="p-1">
-              <Card className="w-full h-[600px]">
-                <CardContent className="flex aspect-square items-center justify-center p-6">
+              <Card className="">
+                <CardContent className="flex aspect-square items-center justify-center p-6 ">
                   <span className="text-4xl font-semibold">{index + 1}</span>
                 </CardContent>
               </Card>

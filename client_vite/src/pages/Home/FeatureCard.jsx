@@ -1,7 +1,6 @@
 import React from 'react';
-import './ComponentCard.css';
-import '/project/Project/Project/first_react/src/component/Components/ComponentCard.css';
-const ComponentCard = () => {
+
+const FeatureCard = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mt-10">
       {/* Card 1 */}
@@ -107,4 +106,4 @@ const ComponentCard = () => {
   );
 }
 
-export default ComponentCard;
+export default FeatureCard;
