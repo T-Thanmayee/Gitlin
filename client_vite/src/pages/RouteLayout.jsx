@@ -6,7 +6,7 @@ import RecipeReviewCard from './Home/HomeCard'
 
 function RouteLayout() {
   return (
-    <div>
+    <div className='w-screen'>
         <Navbar  />
         <div style={{minHeight:'95vh'}}>
         <Outlet />

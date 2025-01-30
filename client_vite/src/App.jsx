@@ -1,13 +1,14 @@
-import ImgMediaCard from './components/ImgMediaCard'; 
-import RouteLayout from './components/RouteLayout';
+import ImgMediaCard from './pages/ImgMediaCard'; 
+import RouteLayout from './pages/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
-import Fileupload from './components/Fileupload';
+import Fileupload from './pages/Fileupload';
 
-import Register from './components/Register/Register';
-import Login from './components/Login/Login';
-import StudentProfile from './components/ProfileUser/StudentProfile';
-import Tutorials from './components/Tutorials/tutorials';
-import HomeList from './components/Home/HomeList';
+import Register from './pages/Register/Register';
+import Login from './pages/Login/Login';
+import StudentProfile from './pages/ProfileUser/StudentProfile';
+import Tutorials from './pages/Tutorials/tutorials';
+import HomeList from './pages/Home/HomeList';
+import Home from './pages/Home/Home';
 
 function App() {
   let router=createBrowserRouter([
@@ -17,7 +18,7 @@ function App() {
       children:[
                  {
                    path:'',
-                   element:<HomeList/>
+                   element:<Home/>
                 },
                 {
                   path:'/project',
