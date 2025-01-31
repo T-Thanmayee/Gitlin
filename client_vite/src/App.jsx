@@ -9,6 +9,7 @@ import StudentProfile from './pages/ProfileUser/StudentProfile';
 import Tutorials from './pages/Tutorials/tutorials';
 import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
+import FAQs from './pages/FooterAndNav/FAQs';
 
 function App() {
   let router=createBrowserRouter([
@@ -43,7 +44,11 @@ function App() {
                 {
                   path:'tutorials',
                   element:<Tutorials/>
-                }     
+                }   ,
+                {
+                  path:'faqs',
+                  element:<FAQs/>
+                }    
               ]
     }
   ])

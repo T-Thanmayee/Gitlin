@@ -5,6 +5,7 @@ import CountView from './CountView';
 import FeatureCard from './FeatureCard'
 import Testimony from './Testimony';
 import SlideInPage from './SlideInPage';
+
 const App = () => {
   return (
     <div className=''>

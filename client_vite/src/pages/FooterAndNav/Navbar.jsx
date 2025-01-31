@@ -47,7 +47,7 @@ const Navbar = () => {
           <a href="#">About</a>
         </li>
         <li className="py-2 md:py-0 hover:underline">
-          <a href="#">Services</a>
+          <a href="#">FAQs</a>
         </li>
         <li className="py-2 md:py-0 hover:underline">
           <a href="#">Contact</a>
