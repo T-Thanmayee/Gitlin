@@ -1,49 +1,30 @@
 import React, { useState } from "react";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 
 const SlideInPage = () => {
   const [hoveredPost, setHoveredPost] = useState(false);
-  const [hoveredUpload, setHoveredUpload] = useState(false);
 
   return (
-    <div className="flex h-screen">
-      {/* Left Half (Post Area) */}
-      <div className="w-1/2 flex items-center justify-center bg-gray-100 relative">
-        <button
-          className="px-6 py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 focus:outline-none"
-          onMouseEnter={() => setHoveredPost(true)}
-          onMouseLeave={() => setHoveredPost(false)}
-        >
-          Post
-        </button>
-        {/* Post area sliding image */}
-        <img
-          src="https://via.placeholder.com/300"
-          alt="Sliding Image"
-          className={`absolute top-1/2 transform -translate-y-1/2 right-[-300px] transition-all duration-500 ease-in-out ${
-            hoveredPost ? "right-0 z-10" : "z-0"
-          }`}
-        />
+   <div className={`$hoveredPost ? 'grid-cols-2' : ''`}>
+    <Card >
+      <div className={`flex flex-col items-center justify-center w-full h-full p-4 bg-gray-100 transition-all duration-300 ease-in-out transform hover:scale-105 $`}>
+        <h1 className="text-2xl font-bold">Slide In Page</h1>
+        <p className="text-sm">Hover over the card to see the slide in effect</p>
+        <Button className=" p-2" onMouseEnter={()=>setHoveredPost(true)}>Post</Button>
       </div>
-
-      {/* Right Half (Upload Area) */}
-      <div className="w-1/2 relative bg-gray-200 flex items-center justify-center">
-        <button
-          className="px-6 py-3 bg-green-500 text-white font-bold rounded hover:bg-green-600 focus:outline-none"
-          onMouseEnter={() => setHoveredUpload(true)}
-          onMouseLeave={() => setHoveredUpload(false)}
-        >
-          Upload
-        </button>
-        {/* Upload area sliding image */}
-        <img
-          src="https://media.istockphoto.com/id/1317323736/photo/a-view-up-into-the-trees-direction-sky.jpg?s=612x612&w=0&k=20&c=i4HYO7xhao7CkGy7Zc_8XSNX_iqG0vAwNsrH1ERmw2Q="
-          alt="Sliding Image"
-          className={`absolute top-1/2 transform -translate-y-1/2 left-[-300px] transition-all duration-500 ease-in-out ${
-            hoveredUpload ? "left-0 z-10" : "z-0"
-          }`}
-        />
-      </div>
-    </div>
+    </Card>
+    {
+      hoveredPost && window.innerWidth>1024 && (
+        <Card className=" bg-white shadow-lg animate-ease-in animate-slide-in-right animate-duration-700 ms-4">  
+          <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-gray-100">
+            <h1 className="text-2xl font-bold">Slide In Page</h1>
+            <p className="text-sm">Hover over the card to see the slide in effect</p>
+          </div>
+        </Card>
+      )
+    }
+   </div>
   );
 };
 
