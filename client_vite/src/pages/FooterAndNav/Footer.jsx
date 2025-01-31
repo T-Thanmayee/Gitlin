@@ -1,7 +1,8 @@
 // src/Footer.js
 import React from 'react';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
-
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 function Footer() {
   return (
     <footer className="bg-gray-800 py-16">
@@ -61,33 +62,7 @@ function Footer() {
               </li>
             </ul>
           </div>
-          <div className="w-full md:w-1/2 lg:w-1/4 px-4 mb-8 lg:mb-0">
-            <h4 className="text-lg text-white font-semibold capitalize mb-8 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-12 after:bg-pink-500">
-              Accessories
-            </h4>
-            <ul className="space-y-3">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Jewellery
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Bags
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Footwear
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Scarves
-                </a>
-              </li>
-            </ul>
-          </div>
+          
           <div className="w-full md:w-1/2 lg:w-1/4 px-4">
             <h4 className="text-lg text-white font-semibold capitalize mb-8 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-12 after:bg-pink-500">
               Follow Us
@@ -119,6 +94,16 @@ function Footer() {
               </a>
             </div>
           </div>
+          <div className="w-full md:w-1/2 lg:w-1/4 px-4">
+          <h4 className="text-lg text-white font-semibold capitalize mb-8 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-12 after:bg-pink-500">
+              Subscribe
+            </h4>
+            <div className="flex w-full max-w-sm items-center space-x-2">
+      <Input  type="email" placeholder="Email" className="h-fit rounded" />
+      <Button className=" bg-gray-600 rounded-full   hover:bg-white hover:text-gray-800 transition-all h-fit" type="submit">Subscribe</Button>
+    </div>
+            
+            </div>
         </div>
       </div>
     </footer>
