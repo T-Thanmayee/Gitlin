@@ -42,7 +42,7 @@ function Testimony() {
             </div>
         </figcaption>    
     </figure>
-    <figure class="animate-slide-in-left  flex flex-col items-center justify-center p-8 text-center bg-white border-gray-200 rounded-b-lg md:rounded-se-lg dark:bg-gray-800 dark:border-gray-700">
+    <figure class="will-change-scroll animate-slide-in-left  flex flex-col items-center justify-center p-8 text-center bg-white border-gray-200 rounded-b-lg md:rounded-se-lg dark:bg-gray-800 dark:border-gray-700">
         <blockquote class="max-w-2xl mx-auto mb-4 text-gray-500 lg:mb-8 dark:text-gray-400">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Efficient Collaborating</h3>
             <p class="my-4">You have many examples that can be used to create a fast prototype for your team."</p>

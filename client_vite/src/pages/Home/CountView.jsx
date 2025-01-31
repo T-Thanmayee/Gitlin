@@ -65,7 +65,7 @@ function CountView() {
   }, []);
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 my-10 ">
+    <div className=" will-change-scroll w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 my-10 ">
       <div
         id="fullWidthTabContent"
         className="border-t border-gray-200 dark:border-gray-600"
