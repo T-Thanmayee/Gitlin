@@ -5,7 +5,8 @@ import CountView from './CountView';
 import FeatureCard from './FeatureCard'
 import Testimony from './Testimony';
 import SlideInPage from './SlideInPage';
-
+import { FileDelete } from '../DeleteDialog/FileDelete';
+import { EditProfile } from '../ProfileUser/EditProfile';
 const App = () => {
   return (
     <div className=''>
@@ -14,6 +15,7 @@ const App = () => {
     <SlideInPage />
     <CountView />
     <Testimony />
+    <EditProfile/>
     </div>
   );
 };
