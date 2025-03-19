@@ -4,6 +4,7 @@ import img from "../../assets/search.png";
 const Navbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(window.innerWidth >= 768);
 
   const history = ["React", "Node.js", "Tailwind", "Redux"]; // Dummy search history
@@ -16,6 +17,10 @@ const Navbar = () => {
     if (!isMediumScreen) {
       setShowSearch(!showSearch);
     }
+  };
+
+  const handleInputClick = () => {
+    setShowHistory(true);
   };
 
   // Detect screen size changes and update state
@@ -39,9 +44,8 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".search-container")) {
-        if (!isMediumScreen) {
-          setShowSearch(false);
-        }
+        setShowSearch(false);
+        setShowHistory(false); // Always close history when clicking outside
       }
     };
 
@@ -49,7 +53,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [isMediumScreen]);
+  }, []);
 
   return (
     <nav className="bg-gray-800 text-white flex items-center justify-between px-6 py-4 z-10 sticky top-0">
@@ -71,11 +75,11 @@ const Navbar = () => {
                 className="text-black border border-gray-300 rounded px-2 ml-2"
                 type="text"
                 placeholder="Search..."
-                onClick={toggleSearch} // Keep search open when clicking inside
+                onClick={handleInputClick} // Show history when clicking inside
               />
 
               {/* Search History List */}
-              {history.length > 0 && showSearch && (
+              {history.length > 0 && showHistory && (
                 <ul className="absolute left-1.5 top-10 w-full bg-white border border-gray-300 rounded shadow-lg">
                   {history.map((item, index) => (
                     <li key={index} className="p-2 hover:bg-gray-200 cursor-pointer text-black">
