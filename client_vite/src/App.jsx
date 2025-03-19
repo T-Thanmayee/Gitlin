@@ -10,7 +10,7 @@ import Tutorials from './pages/Tutorials/tutorials';
 import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
 import FAQs from './pages/FooterAndNav/FAQs';
-
+import SearchResults from './pages/Home/SearchResults';
 function App() {
   let router=createBrowserRouter([
     {
@@ -48,7 +48,12 @@ function App() {
                 {
                   path:'faqs',
                   element:<FAQs/>
-                }    
+                },
+                {
+                  path:'search',
+                  element:<SearchResults/>
+
+                }
               ]
     }
   ])
