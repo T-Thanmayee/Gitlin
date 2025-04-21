@@ -59,20 +59,20 @@ const Navbar = () => {
     <nav className="bg-gray-800 text-white flex items-center justify-between px-6 py-4 z-10 sticky top-0">
       {/* Logo */}
       <div className="flex items-center space-x-10">
-        <div className="text-xl font-bold">MyLogo</div>
+        <div className="text-xl font-bold">MyLogokhkhk</div>
 
        
       
-<div class="flex items-center justify-center ">
-  <div class="rounded-lg">
-    <div class="flex">
-      <div class="rounded-s-full  bg-gray-600 flex w-10 items-center justify-center   p-5">
-        <svg viewBox="0 0 20 20" aria-hidden="true" class=" pointer-events-none absolute w-5 fill-white transition">
+<div className="flex items-center justify-center ">
+  <div className="rounded-lg">
+    <div className="flex">
+      <div className="rounded-s-full  bg-gray-600 flex w-10 items-center justify-center   p-5">
+        <svg viewBox="0 0 20 20" aria-hidden="true" className=" pointer-events-none absolute w-5 fill-white transition">
           <path d="M16.72 17.78a.75.75 0 1 0 1.06-1.06l-1.06 1.06ZM9 14.5A5.5 5.5 0 0 1 3.5 9H2a7 7 0 0 0 7 7v-1.5ZM3.5 9A5.5 5.5 0 0 1 9 3.5V2a7 7 0 0 0-7 7h1.5ZM9 3.5A5.5 5.5 0 0 1 14.5 9H16a7 7 0 0 0-7-7v1.5Zm3.89 10.45 3.83 3.83 1.06-1.06-3.83-3.83-1.06 1.06ZM14.5 9a5.48 5.48 0 0 1-1.61 3.89l1.06 1.06A6.98 6.98 0 0 0 16 9h-1.5Zm-1.61 3.89A5.48 5.48 0 0 1 9 14.5V16a6.98 6.98 0 0 0 4.95-2.05l-1.06-1.06Z"></path>
         </svg>
       </div>
-      <input type="text" class=" w-full max-w-[160px] bg-gray-600 pl-2 text-base font-semibold outline-0" placeholder="" id=""/>
-      <input type="button" value="Search" class="bg-blue-500 p-2 rounded-e-full  text-white font-semibold hover:bg-blue-800 transition-colors"/>
+      <input type="text" className=" w-full max-w-[160px] bg-gray-600 pl-2 text-base font-semibold outline-0" placeholder="" id=""/>
+      <input type="button" value="Search" className="bg-blue-500 p-2 rounded-e-full  text-white font-semibold hover:bg-blue-800 transition-colors"/>
     </div>
   </div>
 </div>
@@ -99,7 +99,7 @@ const Navbar = () => {
         <li className="py-2 md:py-0">
           <a className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer" href="#">FAQs</a>
         </li>
-        <li className="py-2 md:py-0 ">
+        <li className="py-2 md:py-0 f">
           <a className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer" href="#">Contact</a>
         </li>
       </ul>

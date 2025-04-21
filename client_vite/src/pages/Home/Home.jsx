@@ -7,16 +7,23 @@ import Testimony from './Testimony';
 import SlideInPage from './SlideInPage';
 import { FileDelete } from '../DeleteDialog/FileDelete';
 import { EditProfile } from '../ProfileUser/EditProfile';
-import Slide from '../../components/Slide';
+import Slide from '../../components/ui/Slide';
+import SlideNext from '../../components/ui/SlideNext';
 const App = () => {
   return (
     <div className=''>
     <HomeCarousel />
-    <FeatureCard/>
-    <SlideInPage />
-    <Slide delay={0.5}> <CountView /></Slide>
    
-    <Slide delay={0.5}> <Testimony /></Slide>
+    <FeatureCard/>
+    
+   
+    <SlideNext delay={0.6} className="translate-x-10 rotate-6 p-4">
+  <h1>This will slide in from right and rotate!</h1>
+</SlideNext>
+   <Slide delay={0.5}><SlideInPage /></Slide> 
+    <Slide delay={0.8}> <CountView /></Slide>
+   
+    <Slide delay={0.9}> <Testimony /></Slide>
    
 
     <EditProfile/>
