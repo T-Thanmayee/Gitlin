@@ -7,14 +7,18 @@ import Testimony from './Testimony';
 import SlideInPage from './SlideInPage';
 import { FileDelete } from '../DeleteDialog/FileDelete';
 import { EditProfile } from '../ProfileUser/EditProfile';
+import Slide from '../../components/Slide';
 const App = () => {
   return (
     <div className=''>
     <HomeCarousel />
     <FeatureCard/>
     <SlideInPage />
-    <CountView />
-    <Testimony />
+    <Slide delay={0.5}> <CountView /></Slide>
+   
+    <Slide delay={0.5}> <Testimony /></Slide>
+   
+
     <EditProfile/>
     </div>
   );
