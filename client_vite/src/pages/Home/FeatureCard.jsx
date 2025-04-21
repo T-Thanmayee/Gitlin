@@ -1,14 +1,29 @@
 import React from 'react';
-//animate-fade-left animate-once animate-duration-[1500ms] animate-delay-1000 animate-ease-in animate-normal animate-fill-forwards
+import SlideInPage from './SlideInPage';
+
 const FeatureCard = () => {
   return (
-    <div className=" will-change-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mt-10">
+    <div className="will-change-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mt-10">
       {/* Card 1 */}
-      <div className="will-change-scroll animate-fade-right animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
+      <div
+        className="p-4"
+        data-aos="fade-right"
+        data-aos-duration="1000"
+        data-aos-easing="ease-in"
+        data-aos-once="true"
+      >
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+              >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
               </svg>
             </div>
@@ -18,9 +33,20 @@ const FeatureCard = () => {
             <p className="leading-relaxed text-base text-white dark:text-gray-300">
               Blue bottle crucifix vinyl post-ironic four dollar toast vegan taxidermy. Gastropub indxgo juice poutine.
             </p>
-            <a href="#" className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center">
+            <a
+              href="#"
+              className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center"
+            >
               Learn More
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-4 h-4 ml-2" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-4 h-4 ml-2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </a>
@@ -29,11 +55,25 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 2 */}
-      <div className=" animate-fade-left animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards  p-4">
+      <div
+        className="p-4"
+        data-aos="fade-left"
+        data-aos-duration="1000"
+        data-aos-easing="ease-in"
+        data-aos-once="true"
+      >
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+              >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
               </svg>
             </div>
@@ -43,9 +83,20 @@ const FeatureCard = () => {
             <p className="leading-relaxed text-base text-white dark:text-gray-300">
               Lorem ipsum dolor sit amet. In quos laboriosam non neque eveniet 33 nihil molestias. Rem perspiciatis iure ut laborum inventore et maxime amet.
             </p>
-            <a href="#" className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center">
+            <a
+              href="#"
+              className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center"
+            >
               Learn More
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-4 h-4 ml-2" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-4 h-4 ml-2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </a>
@@ -54,11 +105,25 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 3 */}
-      <div className="  animate-fade-right animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
+      <div
+        className="p-4"
+        data-aos="fade-right"
+        data-aos-duration="1000"
+        data-aos-easing="ease-in"
+        data-aos-once="true"
+      >
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+              >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
               </svg>
             </div>
@@ -68,9 +133,20 @@ const FeatureCard = () => {
             <p className="leading-relaxed text-base text-white dark:text-gray-300">
               Lorem ipsum dolor sit amet. In quos laboriosam non neque eveniet 33 nihil molestias. Rem perspiciatis iure ut laborum inventore et maxime amet.
             </p>
-            <a href="#" className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center">
+            <a
+              href="#"
+              className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center"
+            >
               Learn More
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-4 h-4 ml-2" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-4 h-4 ml-2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </a>
@@ -79,11 +155,25 @@ const FeatureCard = () => {
       </div>
 
       {/* Card 4 */}
-      <div className=" animate-fade-left animate-once animate-duration-[1000ms]  animate-ease-in animate-normal animate-fill-forwards p-4">
+      <div
+        className="p-4"
+        data-aos="fade-left"
+        data-aos-duration="1000"
+        data-aos-easing="ease-in"
+        data-aos-once="true"
+      >
         <div className="flex rounded-lg h-full dark:bg-gray-800 bg-teal-400 p-8 flex-col transition-transform transform hover:scale-105">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 mr-3 inline-flex items-center justify-center rounded-full dark:bg-indigo-500 bg-indigo-500 text-white flex-shrink-0">
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-5 h-5" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+              >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
               </svg>
             </div>
@@ -93,9 +183,20 @@ const FeatureCard = () => {
             <p className="leading-relaxed text-base text-white dark:text-gray-300">
               Lorem ipsum dolor sit amet. In quos laboriosam non neque eveniet 33 nihil molestias. Rem perspiciatis iure ut laborum inventore et maxime amet.
             </p>
-            <a href="#" className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center">
+            <a
+              href="#"
+              className="mt-3 text-black dark:text-white hover:text-blue-600 inline-flex items-center"
+            >
               Learn More
-              <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-4 h-4 ml-2" viewBox="0 0 24 24">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="w-4 h-4 ml-2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </a>
@@ -104,6 +205,6 @@ const FeatureCard = () => {
       </div>
     </div>
   );
-}
+};
 
 export default FeatureCard;

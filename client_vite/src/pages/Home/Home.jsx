@@ -9,6 +9,7 @@ import { FileDelete } from '../DeleteDialog/FileDelete';
 import { EditProfile } from '../ProfileUser/EditProfile';
 import Slide from '../../components/ui/Slide';
 import SlideNext from '../../components/ui/SlideNext';
+import RotateComponent from './RotatedComponent';
 const App = () => {
   return (
     <div className=''>
@@ -17,13 +18,12 @@ const App = () => {
     <FeatureCard/>
     
    
-    <SlideNext delay={0.6} className="translate-x-10 rotate-6 p-4">
-  <h1>This will slide in from right and rotate!</h1>
-</SlideNext>
-   <Slide delay={0.5}><SlideInPage /></Slide> 
-    <Slide delay={0.8}> <CountView /></Slide>
    
-    <Slide delay={0.9}> <Testimony /></Slide>
+   <SlideInPage />
+   <RotateComponent/>
+    <CountView />
+   
+     <Testimony />
    
 
     <EditProfile/>
