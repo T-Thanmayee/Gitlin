@@ -7,7 +7,7 @@ const FeatureCard = () => {
       {/* Card 1 */}
       <div
         className="p-4"
-        data-aos="fade-right"
+        data-aos="fade-up"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -57,7 +57,7 @@ const FeatureCard = () => {
       {/* Card 2 */}
       <div
         className="p-4"
-        data-aos="fade-left"
+        data-aos="fade-up"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -107,7 +107,7 @@ const FeatureCard = () => {
       {/* Card 3 */}
       <div
         className="p-4"
-        data-aos="fade-right"
+        data-aos="fade-down"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -157,7 +157,7 @@ const FeatureCard = () => {
       {/* Card 4 */}
       <div
         className="p-4"
-        data-aos="fade-left"
+        data-aos="fade-down"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"

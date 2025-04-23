@@ -19,8 +19,7 @@ const App = () => {
     
    
    
-   <SlideInPage />
-   <RotateComponent/>
+  
     <CountView />
    
      <Testimony />

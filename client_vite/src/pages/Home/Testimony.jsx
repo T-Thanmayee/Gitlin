@@ -5,7 +5,7 @@ function Testimony() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 md:mb-12 bg-white dark:bg-gray-800">
       <figure
         className="flex flex-col items-center justify-center p-8 text-center bg-white border-b border-gray-200 rounded-t-lg md:rounded-t-none md:rounded-ss-lg md:border-e dark:bg-gray-800 dark:border-gray-700"
-        data-aos="slide-right"
+        data-aos="slide-up"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -28,7 +28,7 @@ function Testimony() {
       </figure>
       <figure
         className="flex flex-col items-center justify-center p-8 text-center bg-white border-b border-gray-200 md:rounded-se-lg dark:bg-gray-800 dark:border-gray-700"
-        data-aos="slide-left"
+        data-aos="slide-up"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -53,7 +53,7 @@ function Testimony() {
       </figure>
       <figure
         className="flex flex-col items-center justify-center p-8 text-center bg-white border-b border-gray-200 md:rounded-es-lg md:border-b-0 md:border-e dark:bg-gray-800 dark:border-gray-700"
-        data-aos="slide-right"
+        data-aos="slide-down"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
@@ -78,7 +78,7 @@ function Testimony() {
       </figure>
       <figure
         className="flex flex-col items-center justify-center p-8 text-center bg-white border-gray-200 rounded-b-lg md:rounded-se-lg dark:bg-gray-800 dark:border-gray-700"
-        data-aos="slide-left"
+        data-aos="slide-down"
         data-aos-duration="1000"
         data-aos-easing="ease-in"
         data-aos-once="true"
