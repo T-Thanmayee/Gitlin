@@ -14,6 +14,9 @@ import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
 import FAQs from './pages/FooterAndNav/FAQs';
 import SearchResults from './pages/Home/SearchResults';
+import { ThemeProvider } from './components/theme-provider';
+import { Toaster } from './components/ui/sonner';
+
 function App() {
   useEffect(() => {
     AOS.init({
@@ -70,8 +73,11 @@ function App() {
   ])
   return (
     <div>
-      
+       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+
+            <Toaster/>
       <RouterProvider router={router} />
+      </ThemeProvider>
     </div>
   );
 }

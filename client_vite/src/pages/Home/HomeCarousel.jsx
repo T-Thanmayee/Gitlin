@@ -29,7 +29,7 @@ function HomeCarousel() {
         ))}
       </CarouselContent>
       <CarouselPrevious className="left-10 "/>
-      <CarouselNext className="right-10"/>
+      <CarouselNext className="right-10" />
     </Carousel>
     </div>
   )
