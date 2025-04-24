@@ -14,6 +14,7 @@ import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
 import FAQs from './pages/FooterAndNav/FAQs';
 import SearchResults from './pages/Home/SearchResults';
+import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -64,6 +65,10 @@ function App() {
                   path:'search',
                   element:<SearchResults/>
 
+                },
+                {
+                  path:'mentors',
+                  element:<MentorDisplayCard/>
                 }
               ]
     }
