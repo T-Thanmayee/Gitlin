@@ -10,12 +10,15 @@ import { EditProfile } from '../ProfileUser/EditProfile';
 import Slide from '../../components/ui/Slide';
 import SlideNext from '../../components/ui/SlideNext';
 import RotateComponent from './RotatedComponent';
+import CollabCard from '../Project Folder/CollabCard';
+import { MentorDisplayCard } from '../Mentor/MentorDisplayCards';
 const App = () => {
   return (
     <div className=''>
     <HomeCarousel />
-   
+   <CollabCard />
     <FeatureCard/>
+    <MentorDisplayCard/>
     
    
    

@@ -1,3 +1,5 @@
+import { ThemeProvider } from './components/theme-provider';
+import { Toaster } from './components/ui/sonner';
 import ImgMediaCard from './pages/ImgMediaCard'; 
 import RouteLayout from './pages/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
@@ -14,9 +16,7 @@ import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
 import FAQs from './pages/FooterAndNav/FAQs';
 import SearchResults from './pages/Home/SearchResults';
-import { ThemeProvider } from './components/theme-provider';
-import { Toaster } from './components/ui/sonner';
-
+import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -67,6 +67,10 @@ function App() {
                   path:'search',
                   element:<SearchResults/>
 
+                },
+                {
+                  path:'mentors',
+                  element:<MentorDisplayCard/>
                 }
               ]
     }
