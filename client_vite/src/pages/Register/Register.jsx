@@ -1,97 +1,186 @@
-//import './Register.css'
-import {useForm} from 'react-hook-form'
-import { useState } from 'react'
-import axios from 'axios'
-function Register(){
-    //state
-    let [userInfo,setUserInfo]=useState({})
-    let [showInfo,setShowInfo]=useState(false)
-    let [err,setErr]=useState('')
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import axios from 'axios';
 
-    let {register,handleSubmit,formState:{errors}}=useForm()
+function Register() {
+  const [userInfo, setUserInfo] = useState({});
+  const [showInfo, setShowInfo] = useState(false);
+  const [err, setErr] = useState('');
 
-    async function displayUserDetails(data1){
-        let data=await axios.post('http://localhost:4000/usersinfo/newuser',data1)
-        console.log(data)
-        if(data.data.message=='done')
-        {
-         
-         console.log(data.data.data)
-        }
-        else{
-         setErr("i dont know about the error")
-        }
-     }
-        
-        
-    
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-    return(
-        <div className='w-50 mx-auto mt-5 mb-5 bg-white p-5 rounded-3 shadow-lg'>
-            <form className='d-flex flex-wrap' onSubmit={handleSubmit(displayUserDetails)}>
-                <h1 className='display-6 w-100 mb-5 mt-2'>Registration Form</h1>
-                <div className='form-group me-5 mb-4'>
-                    <label htmlFor="username" className='form-label' >Username</label>
-                    <input type="text" className='form-control bg-light' id="username" autoComplete='off' {...register('username',{required:true})}/>
-                    {errors.username?.type==='required' && <p className='text-danger lead'>First Name is required</p>}
-                    </div>
-                <div className=' mb-4 w-100'>
-                    <label htmlFor="password" className='form-label' >Password</label>
-                    <input type="password" className='form-control bg-light' id="password" autoComplete='off' {...register('password',{required:true})}/>
-                    {errors.password?.type==='required' && <p className='text-danger lead'>Password is required</p>}
-                    
-                </div>
-                <div className='form-group me-5 mb-4'>
-                    <label htmlFor="birthday" className='form-label' >Birthday</label>
-                    <input type="date" className='form-control bg-light' id="birthday" {...register('birthday',{required:true})}/>
-                    {errors.birthday?.type==='required' && <p className='text-danger lead'>BirthDate is required</p>}
-                </div>
-                <div className='form-group mb-4 d-flex flex-wrap'>
-                    <label className='form-label w-100' >Gender</label>
-                    <div className='form-check me-5'>
-                        <input type="radio" className='form-check-input' id="male" value="M" {...register('gender',{required:true})}/>
-                        <label htmlFor="male" className="form-check-label">Male</label>
-                    </div>
-                    <div className='form-check'>
-                        <input type="radio" className='form-check-input' id="female" value="F" {...register('gender',{required:true})}/>
-                        <label htmlFor="female" className="form-check-label">Female</label>
-                    </div>
-                    {errors.gender?.type==='required' && <p className='text-danger lead'>Gender is required</p>}
-                </div>
-                <div className='form-group me-5 mb-4'>
-                    <label htmlFor="email" className='form-label' >Email</label>
-                    <input type="email" className='form-control bg-light' id="email" autoComplete='off' {...register('email',{required:true})}/>
-                    {errors.email?.type==='required' && <p className='text-danger lead'>Email is required</p>}
-                </div>
-                <div className='form-group mb-4'>
-                    <label htmlFor="phone" className='form-label' >Phone Number</label>
-                    <input type="number" className='form-control bg-light' id="phone" autoComplete='off' {...register('phone',{required:true,minLength:10,maxLength:10})}/>
-                    {errors.phone?.type==='required' && <p className='text-danger lead'>Phone Number is required</p>}
-                    {errors.phone?.type==='minLength' && <p className='text-warning lead'>Phone Number is 10 digits</p>}
-                    {errors.phone?.type==='maxLength' && <p className='text-warning lead'>Phone Number is 10 digits</p>}
+  async function displayUserDetails(data) {
+    try {
+      const response = await axios.post('http://localhost:4000/usersinfo/newuser', data);
+      console.log(response);
+      if (response.data.message === 'done') {
+        setUserInfo(response.data.data);
+        setShowInfo(true);
+        setErr('');
+      } else {
+        setErr('An error occurred during registration.');
+      }
+    } catch (error) {
+      setErr('Failed to connect to the server.');
+      console.error(error);
+    }
+  }
 
-                </div>
-                <div className='form-group me-5 mb-4'>
-                    <label htmlFor="linkedin" className='form-label' >LinkedIn</label>
-                    <input type="text" className='form-control bg-light' id="linkedin" autoComplete='off' {...register('linkedin')}/>
-                    
-                </div>
-                <div className='form-group mb-4'>
-                    <label htmlFor="github" className='form-label' >GitHub</label>
-                    <input type="text" className='form-control bg-light' id="github" autoComplete='off' {...register('github')}/>
+  return (
+    <div className="w-full max-w-2xl mx-auto my-8 bg-white p-8 rounded-xl shadow-lg">
+      <form onSubmit={handleSubmit(displayUserDetails)} className="space-y-6">
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Registration Form</h1>
 
-                </div>
-                <button type="submit" className='btn btn-primary w-25 mt-3'>Submit</button>
-            </form>
-            {showInfo===true && <div className="bg-dark text-white p-3 mt-5 rounded-3">
-                    <p className='lead mt-2'>Name : {userInfo.firstName} {userInfo.lastName} ({userInfo.gender})</p>
-                    <p className='lead'>Birthday: {userInfo.birthday}</p>
-                    <p className='lead'>Email: {userInfo.email}</p>
-                    <p className='lead'>Phone Number: {userInfo.phone}</p>
-                    <p className='lead'>Subject: {userInfo.subject}</p>
-            </div>} 
+        <div className="space-y-2">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+          <input
+            type="text"
+            id="username"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('username', { required: true })}
+          />
+          {errors.username?.type === 'required' && (
+            <p className="text-red-500 text-sm">Username is required</p>
+          )}
         </div>
-    )
+
+        <div className="space-y-2">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+          <input
+            type="password"
+            id="password"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('password', { required: true })}
+          />
+          {errors.password?.type === 'required' && (
+            <p className="text-red-500 text-sm">Password is required</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="birthday" className="block text-sm font-medium text-gray-700">Birthday</label>
+          <input
+            type="date"
+            id="birthday"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('birthday', { required: true })}
+          />
+          {errors.birthday?.type === 'required' && (
+            <p className="text-red-500 text-sm">Birthday is required</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Gender</label>
+          <div className="flex space-x-4">
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="male"
+                value="M"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                {...register('gender', { required: true })}
+              />
+              <label htmlFor="male" className="ml-2 text-sm text-gray-700">Male</label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="female"
+                value="F"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                {...register('gender', { required: true })}
+              />
+              <label htmlFor="female" className="ml-2 text-sm text-gray-700">Female</label>
+            </div>
+          </div>
+          {errors.gender?.type === 'required' && (
+            <p className="text-red-500 text-sm">Gender is required</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            type="email"
+            id="email"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('email', { required: true })}
+          />
+          {errors.email?.type === 'required' && (
+            <p className="text-red-500 text-sm">Email is required</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+          <input
+            type="number"
+            id="phone"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('phone', { required: true, minLength: 10, maxLength: 10 })}
+          />
+          {errors.phone?.type === 'required' && (
+            <p className="text-red-500 text-sm">Phone Number is required</p>
+          )}
+          {(errors.phone?.type === 'minLength' || errors.phone?.type === 'maxLength') && (
+            <p className="text-yellow-500 text-sm">Phone Number must be 10 digits</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">LinkedIn</label>
+          <input
+            type="text"
+            id="linkedin"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('linkedin')}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="github" className="block text-sm font-medium text-gray-700">GitHub</label>
+          <input
+            type="text"
+            id="github"
+            autoComplete="off"
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register('github')}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Submit
+        </button>
+      </form>
+
+      {err && (
+        <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-md">
+          <p className="text-sm">{err}</p>
+        </div>
+      )}
+
+      {showInfo && (
+        <div className="mt-6 p-6 bg-gray-800 text-white rounded-md">
+          <p className="text-sm">Username: {userInfo.username}</p>
+          <p className="text-sm">Birthday: {userInfo.birthday}</p>
+          <p className="text-sm">Gender: {userInfo.gender === 'M' ? 'Male' : 'Female'}</p>
+          <p className="text-sm">Email: {userInfo.email}</p>
+          <p className="text-sm">Phone Number: {userInfo.phone}</p>
+          {userInfo.linkedin && <p className="text-sm">LinkedIn: {userInfo.linkedin}</p>}
+          {userInfo.github && <p className="text-sm">GitHub: {userInfo.github}</p>}
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default Register
+export default Register;
