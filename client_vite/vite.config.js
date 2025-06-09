@@ -9,4 +9,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+ 
+  server: {
+    // Ensure no proxy is set for /user/register
+    proxy: {
+      port: 5173,
+    }, // Empty or remove if not needed
+  },
+
 })

@@ -4,8 +4,12 @@ const mongoose = require('mongoose');
 const path=require('path')
 require('dotenv').config()
 const port=process.env.PORT || 5000
-//create the client mongobd
-
+const cors=require('cors')
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type'], // Allow specific headers
+}));
 
 const a=process.env.mongodburl
 
@@ -16,7 +20,6 @@ mongoose.connect(a, {
   .catch(err => console.error(err));
 
 
-app.use(exp.static(path.join(__dirname,'../webteam18/build')))
 
 app.use(exp.json())
 

@@ -1,19 +1,22 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import axios from 'axios';
-
+const url=import.meta.env.REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/';
+console.log(url);
 function Register() {
   const [userInfo, setUserInfo] = useState({});
   const [showInfo, setShowInfo] = useState(false);
   const [err, setErr] = useState('');
-
+ 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   async function displayUserDetails(data) {
     try {
-      const response = await axios.post('http://localhost:4000/usersinfo/newuser', data);
+      const response = await axios.post(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/register`, data,{headers: {
+        'Content-Type': 'application/json',
+      }});
       console.log(response);
-      if (response.data.message === 'done') {
+      if (response.data.message === 'User registered successfully') {
         setUserInfo(response.data.data);
         setShowInfo(true);
         setErr('');
