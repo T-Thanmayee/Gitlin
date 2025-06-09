@@ -67,3 +67,20 @@ get http://localhost:4000/usersinfo/userproject/ravi234
 
 ###
 get http://localhost:4000/projectinfo/getprojects
+
+
+###
+post http://localhost:4000/user/register
+Content-Type: application/json
+
+{
+    "username": "kiranmayi_01",
+  "password": "mypassword12345",
+  "birthday": "2003-12-11",
+  "gender": "Female",
+  "email": "kiranmayi@example.com",
+  "phoneNumber": "+91-9876543210",
+  "linkedIn": "https://linkedin.com/in/kiranmayi",
+  "github": "https://github.com/kiranmayi"
+}
+

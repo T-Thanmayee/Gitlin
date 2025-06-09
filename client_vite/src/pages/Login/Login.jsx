@@ -60,9 +60,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-wrap min-h-screen md:flex-row flex-col-reverse justify-around items-center p-2">
       {/* Left Side: Image with Caption */}
-      <div className="w-1/2 bg-gray-100 dark:bg-gray-800 flex flex-col justify-center items-center p-10">
+      <div className="md:w-1/2 w-full  bg-gray-100 dark:bg-gray-800 flex flex-col justify-center items-center p-10">
       <h1 className="text-2xl font-semibold italic text-gray-800 dark:text-white mb-4 text-center font-serif">
   Come find your path — do projects, build profiles, grow together.
 </h1>
@@ -75,7 +75,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Login Card */}
-      <div className="w-1/2 flex justify-center items-center bg-gray-50">
+      <div className="md:w-1/2 w-full flex  justify-center items-center bg-gray-50 p-10">
         {!showForgotPassword ? (
           <Card className="w-96 p-2">
             <CardHeader>

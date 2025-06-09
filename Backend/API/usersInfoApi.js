@@ -1,73 +1,17 @@
-const exp=require('express')
-const usersInfo=exp.Router();
-const bycryptjs=require('bcrypt')
-const jwt=require('jsonwebtoken')
-const eah=require('express-async-handler')
-require('dotenv').config
+// routes/users.js
+const express = require('express');
+const router = express.Router();
+const User = require('../Schema/Users');
 
-//const VerfiyToken=require('../Middleware/VerfiyToken')
+// @POST /users/register
+router.post('/register', async (req, res) => {
+  try {
+    const user = new User(req.body);
+    await user.save();
+    res.status(201).json({ message: 'User registered successfully', user });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-let usersinfo
-let projectinfo
-let postinfo
-usersInfo.use((req,res,next)=>{
-     usersinfo=req.app.get("usersinfo")
-     projectinfo=req.app.get("projectinfo")
-     postinfo=req.app.get('postinfo')
-    next()
-})
-usersInfo.post('/newuser',eah(
-    async(req,res)=>{
-        const newuser=req.body;
-        console.log(newuser)
-        const dbuser=await usersinfo.findOne({username:newuser.username})
-        console.log(dbuser,"why not coming")
-        if(dbuser!==null)
-        {
-            res.send({message:"enter correct username already exist"})
-        }
-        else{
-           const hashedpass= await bycryptjs.hash(newuser.password,6)
-           newuser.password=hashedpass
-           await usersinfo.insertOne(newuser)
-           res.send({message:"user created"})
-    
-        }
-    }
-))
-usersInfo.post('/login',async(req,res)=>{
-    const user=req.body
-    const dbuser= await usersinfo.findOne({username:user.username})
-    console.log(user,dbuser)
-    if(dbuser===null)
-    {
-        res.send({message:"enter correct username"})
-    }
-    else{
-        const status = await bycryptjs.compare(user.password,dbuser.password)
-        console.log(status)
-        if(status===false)
-        {
-            res.send({message:"Invalid password"})
-        }
-        else{
-            const signedToken=jwt.sign({username:dbuser.username},process.env.SECRET_CODE,{expiresIn:300000})
-            res.send({message:"done",Token:signedToken,user:dbuser})
-        }
-    }
-})
-usersInfo.get('/userproject/:username',eah(async(req,res)=>{
-    let usercred=req.params.username
-    
-    const projectOfUser=await projectinfo.find({username:usercred}).toArray()
-    res.send({message:"done",payload:projectOfUser})
-
-    
-
-}))
-usersInfo.get('/userpost/:username',eah(async(req,res)=>{
-    let usercred=req.params.username
-    const projectOfUser=await postinfo.find({username:usercred}).toArray()
-    res.send({message:"done",payload:projectOfUser})
-}))
-module.exports=usersInfo;
+module.exports = router;
