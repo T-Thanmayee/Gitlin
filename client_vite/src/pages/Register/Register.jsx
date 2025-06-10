@@ -1,32 +1,59 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import axios from 'axios';
-const url=import.meta.env.REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/';
-console.log(url);
+import bcrypt from 'bcryptjs';
+
+const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/';
+console.log('Backend URL:', url);
+
 function Register() {
   const [userInfo, setUserInfo] = useState({});
   const [showInfo, setShowInfo] = useState(false);
   const [err, setErr] = useState('');
- 
+
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   async function displayUserDetails(data) {
     console.log(data);
     try {
-      const response = await axios.post(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/register`, data,{headers: {
-        'Content-Type': 'application/json',
-      }});
-      console.log(response);
+      // Hash the password before sending it to the backend
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(data.password, salt);
+
+      // Create a new data object with the hashed password
+      const dataWithHashedPassword = {
+        ...data,
+        password: hashedPassword,
+      };
+
+      const response = await axios.post(`${url}user/register`, dataWithHashedPassword, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000, // Prevent hanging
+      });
+      console.log('Response:', response.data);
       if (response.data.message === 'User registered successfully') {
         setUserInfo(response.data.data);
         setShowInfo(true);
         setErr('');
       } else {
-        setErr('An error occurred during registration.');
+        setErr('Registration failed: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
-      setErr('Failed to connect to the server.');
-      console.error(error);
+      console.error('Axios Error:', {
+        message: error.message,
+        code: error.code,
+        config: error.config,
+        response: error.response ? error.response.data : null,
+      });
+      if (error.code === 'ERR_NETWORK') {
+        setErr('Network error: Unable to connect to the server. Please check if the backend is running.');
+      } else if (error.response) {
+        setErr(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+      } else {
+        setErr('Failed to connect to the server: ' + error.message);
+      }
     }
   }
 
@@ -42,10 +69,13 @@ function Register() {
             id="username"
             autoComplete="off"
             className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            {...register('username', { required: true })}
+            {...register('username', { required: true, minLength: 3 })}
           />
           {errors.username?.type === 'required' && (
             <p className="text-red-500 text-sm">Username is required</p>
+          )}
+          {errors.username?.type === 'minLength' && (
+            <p className="text-red-500 text-sm">Username must be at least 3 characters</p>
           )}
         </div>
 
@@ -56,10 +86,13 @@ function Register() {
             id="password"
             autoComplete="off"
             className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            {...register('password', { required: true })}
+            {...register('password', { required: true, minLength: 8 })}
           />
           {errors.password?.type === 'required' && (
             <p className="text-red-500 text-sm">Password is required</p>
+          )}
+          {errors.password?.type === 'minLength' && (
+            <p className="text-red-500 text-sm">Password must be at least 8 characters</p>
           )}
         </div>
 
@@ -112,10 +145,13 @@ function Register() {
             id="email"
             autoComplete="off"
             className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            {...register('email', { required: true })}
+            {...register('email', { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ })}
           />
           {errors.email?.type === 'required' && (
             <p className="text-red-500 text-sm">Email is required</p>
+          )}
+          {errors.email?.type === 'pattern' && (
+            <p className="text-red-500 text-sm">Please enter a valid email address</p>
           )}
         </div>
 

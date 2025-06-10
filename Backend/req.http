@@ -74,13 +74,13 @@ post http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/regi
 Content-Type: application/json
 
 {
-    "username": "kiranmayi_01",
-  "password": "mypassword12345",
+    "username": "thanu",
+  "password": "thanu21",
   "birthday": "2003-12-11",
   "gender": "Female",
-  "email": "kiranmayi@example.com",
+  "email": "thanu@example.com",
   "phoneNumber": "+91-9876543210",
-  "linkedIn": "https://linkedin.com/in/kiranmayi",
-  "github": "https://github.com/kiranmayi"
+  "linkedIn": "https://linkedin.com/in/thanu",
+  "github": "https://github.com/thanu"
 }
 
