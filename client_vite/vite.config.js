@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     // Ensure no proxy is set for /user/register
     proxy: {
-      port: 5173,
+      
     }, // Empty or remove if not needed
   },
 

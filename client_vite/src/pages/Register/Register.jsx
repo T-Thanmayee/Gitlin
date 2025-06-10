@@ -11,6 +11,7 @@ function Register() {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   async function displayUserDetails(data) {
+    console.log(data);
     try {
       const response = await axios.post(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/register`, data,{headers: {
         'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ function Register() {
               <input
                 type="radio"
                 id="male"
-                value="M"
+                value="Male"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 {...register('gender', { required: true })}
               />
@@ -92,7 +93,7 @@ function Register() {
               <input
                 type="radio"
                 id="female"
-                value="F"
+                value="Female"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 {...register('gender', { required: true })}
               />
@@ -119,15 +120,15 @@ function Register() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
           <input
             type="number"
-            id="phone"
+            id="phoneNumber"
             autoComplete="off"
             className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            {...register('phone', { required: true, minLength: 10, maxLength: 10 })}
+            {...register('phoneNumber', { required: true, minLength: 10, maxLength: 10 })}
           />
-          {errors.phone?.type === 'required' && (
+          {errors.phoneNumber?.type === 'required' && (
             <p className="text-red-500 text-sm">Phone Number is required</p>
           )}
           {(errors.phone?.type === 'minLength' || errors.phone?.type === 'maxLength') && (
