@@ -3,7 +3,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
 
-const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/';
+const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/'
 console.log('Backend URL:', url);
 
 function Register() {
@@ -158,17 +158,25 @@ function Register() {
         <div className="space-y-2">
           <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
           <input
-            type="number"
+            type="text"
             id="phoneNumber"
             autoComplete="off"
             className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            {...register('phoneNumber', { required: true, minLength: 10, maxLength: 10 })}
+            {...register('phoneNumber', { 
+              required: true, 
+              minLength: 10, 
+              maxLength: 10, 
+              pattern: /^[0-9]{10}$/ 
+            })}
           />
           {errors.phoneNumber?.type === 'required' && (
             <p className="text-red-500 text-sm">Phone Number is required</p>
           )}
-          {(errors.phone?.type === 'minLength' || errors.phone?.type === 'maxLength') && (
-            <p className="text-yellow-500 text-sm">Phone Number must be 10 digits</p>
+          {(errors.phoneNumber?.type === 'minLength' || errors.phoneNumber?.type === 'maxLength') && (
+            <p className="text-yellow-500 text-sm">Phone Number must be exactly 10 digits</p>
+          )}
+          {errors.phoneNumber?.type === 'pattern' && (
+            <p className="text-red-500 text-sm">Phone Number must contain only digits</p>
           )}
         </div>
 
@@ -212,9 +220,9 @@ function Register() {
         <div className="mt-6 p-6 bg-gray-800 text-white rounded-md">
           <p className="text-sm">Username: {userInfo.username}</p>
           <p className="text-sm">Birthday: {userInfo.birthday}</p>
-          <p className="text-sm">Gender: {userInfo.gender === 'M' ? 'Male' : 'Female'}</p>
+          <p className="text-sm">Gender: {userInfo.gender}</p>
           <p className="text-sm">Email: {userInfo.email}</p>
-          <p className="text-sm">Phone Number: {userInfo.phone}</p>
+          <p className="text-sm">Phone Number: {userInfo.phoneNumber}</p>
           {userInfo.linkedin && <p className="text-sm">LinkedIn: {userInfo.linkedin}</p>}
           {userInfo.github && <p className="text-sm">GitHub: {userInfo.github}</p>}
         </div>

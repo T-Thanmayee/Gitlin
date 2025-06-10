@@ -9,7 +9,7 @@ const cors=require('cors')
 
 app.use(cors({
   origin: [
-    'https://literate-space-guide-9766rwg7rj5wh97qx-5173.app.github.dev', // Your frontend origin
+    'https://solid-sniffle-4jqqqqx79prv3j74w-5173.app.github.dev', // Your frontend origin
     'http://localhost:5173',
     '*', // For local development
   ],
