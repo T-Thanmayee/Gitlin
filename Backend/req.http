@@ -70,9 +70,12 @@ get http://localhost:4000/hello
 
 
 ###
-get http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/feed
+post http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/68496ba7fd8d7a00b70d983a/comment
+
 Content-Type: application/json
 
 {
-    "userId": "6849688569aeaef02fcc09c5" 
+     "userId":"6849686d69aeaef02fcc09c3",
+      "text": "Awesome demo! Can't wait to try it!",
+      "parentComment": null
 }

@@ -205,4 +205,46 @@ router.get('/search', async (req, res) => {
   }
 });
 
+router.post('/:id/follow', async (req, res) => {
+  try {
+    const { userId } = req.body; // User who is performing the follow action
+    const targetUserId = req.params.id; // User to follow/unfollow
+
+    // Validate userId and targetUserId
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ error: 'Invalid userId or target user ID' });
+    }
+    if (userId === targetUserId) {
+      return res.status(400).json({ error: 'Cannot follow yourself' });
+    }
+
+    const user = await User.findById(userId);
+    const targetUser = await User.findById(targetUserId);
+    if (!user || !targetUser) {
+      return res.status(404).json({ error: 'User or target user not found' });
+    }
+
+    // Initialize following array if null
+    if (!user.following) {
+      user.following = [];
+    }
+
+    // Follow or unfollow
+    const isFollowing = user.following.includes(targetUserId);
+    if (isFollowing) {
+      user.following = user.following.filter(id => id.toString() !== targetUserId);
+    } else {
+      user.following.push(targetUserId);
+    }
+    await user.save();
+
+    res.json({
+      message: isFollowing ? 'Unfollowed successfully' : 'Followed successfully',
+      following: user.following
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Failed to update follow status', details: err.message });
+  }
+});
 module.exports = router;

@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String,  trim: true }, // Added for Postui.jsx
   avatar: { type: String, default: '/placeholder-user.jpg' }, // Added for Postui.jsx
   verified: { type: Boolean, default: false }, // Added for Postui.jsx
-  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] // Added for feed
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }] // Added for feed
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
