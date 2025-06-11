@@ -1,11 +1,9 @@
- import React, { useState, useEffect } from "react";
-import img from "../../assets/search.png";
+import React, { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import { ModeToggle } from "../../components/mode-toggle";
 "use client"
 
-import {  useRef } from "react"
-import { Search, X } from "lucide-react"
-// import { ModeToggle } from "@/components/ui/mode-toggle"
+import { useRef } from "react"
 
 const Navbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false)
@@ -86,7 +84,7 @@ const Navbar = () => {
         </div>
       )}
 
-      <nav className="bg-indigo-50 dark:bg-gray-600 text-white flex items-center justify-between px-6 py-4 z-10 sticky top-0">
+      <nav className="bg-green-600 dark:bg-green-700 text-white flex items-center justify-between px-6 py-4 z-10 sticky top-0">
         {/* Logo */}
         <div className="flex items-center space-x-10">
           <div className="text-xl font-bold">MyLogo</div>
@@ -96,7 +94,7 @@ const Navbar = () => {
             <div className="search-container flex items-center justify-center">
               <div className="rounded-lg">
                 <div className="flex">
-                  <div className="rounded-s-full border-1  border-black dark:bg-gray-600 flex w-10 items-center justify-center p-5">
+                  <div className="rounded-s-full border-1 border-black dark:bg-green-800 flex w-10 items-center justify-center p-5">
                     <svg
                       viewBox="0 0 20 20"
                       aria-hidden="true"
@@ -107,9 +105,7 @@ const Navbar = () => {
                   </div>
                   <input
                     type="text"
-                 className="w-full max-w-[160px] pl-2 text-base font-semibold outline-0 border dark:border-white bg-indigo-50 text-black dark:bg-gray-600 dark:text-white placeholder:text-gray-500"
-
-
+                    className="w-full max-w-[160px] pl-2 text-base font-semibold outline-0 border dark:border-white bg-green-800 text-white placeholder:text-gray-400"
                     placeholder="search here.."
                   />
                   <input
@@ -160,10 +156,10 @@ const Navbar = () => {
         {/* Navigation Links */}
         <ul
           className={`fixed top-14 right-0 w-full flex flex-col items-center transition-transform duration-300 md:static md:flex-row md:w-auto md:space-x-6 md:transform-none ${
-            isNavOpen ? "translate-x-0 bg-gray-700 p-5" : "translate-x-full md:translate-x-0  "
+            isNavOpen ? "translate-x-0 bg-green-700 p-5" : "translate-x-full md:translate-x-0"
           }`}
         >
-          <li className="p-1 md:py-0 ">
+          <li className="p-1 md:py-0">
             <a
               className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               href="#"
@@ -171,7 +167,7 @@ const Navbar = () => {
               Home
             </a>
           </li>
-          <li className="py-2 md:py-0 ">
+          <li className="py-2 md:py-0">
             <a
               className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               href="#"
@@ -187,12 +183,28 @@ const Navbar = () => {
               FAQs
             </a>
           </li>
-          <li className="py-2 md:py-0 f">
+          <li className="py-2 md:py-0">
             <a
               className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               href="#"
             >
               Contact
+            </a>
+          </li>
+          <li className="py-2 md:py-0">
+            <a
+              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              href="/register"
+            >
+              Register
+            </a>
+          </li>
+          <li className="py-2 md:py-0">
+            <a
+              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              href="/login"
+            >
+              Login
             </a>
           </li>
           <ModeToggle className="" />

@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import axios from 'axios';
+
+const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/';
 
 export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -10,20 +14,34 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
-    const user = window.sessionStorage.getItem('email');
-    const pass = window.sessionStorage.getItem('password');
+    try {
+      const response = await axios.post(`${url}user/login`, { email, password }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000,
+      });
 
-    if (user === email) {
-      if (pass === password) {
-        window.location.href = "frame.html";
+      if (response.data.message === 'Login successful') {
+        window.sessionStorage.setItem('email', email);
+        window.sessionStorage.setItem('userId', response.data.userId);
+        navigate('/'); // Redirect to Home
       } else {
-        setError('Incorrect Password');
+        setError('Invalid email or password');
       }
-    } else {
-      setError('Incorrect Email');
+    } catch (error) {
+      console.error('Login Error:', error);
+      if (error.response?.status === 404) {
+        setError('User not found. Please register first.');
+      } else if (error.response?.status === 401) {
+        setError('Incorrect password');
+      } else {
+        setError('Failed to connect to the server: ' + error.message);
+      }
     }
   };
 
@@ -32,7 +50,7 @@ export default function LoginPage() {
     setShowForgotPassword(true);
   };
 
-  const handlePasswordChange = (event) => {
+  const handlePasswordChange = async (event) => {
     event.preventDefault();
 
     const hasUppercase = /[A-Z]/.test(password);
@@ -55,18 +73,32 @@ export default function LoginPage() {
       return;
     }
 
-    window.sessionStorage.setItem('password', password);
-    window.location.href = "frame.html";
+    try {
+      const response = await axios.post(`${url}user/reset-password`, { email, newPassword: password }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000,
+      });
+
+      if (response.data.message === 'Password updated successfully') {
+        window.sessionStorage.setItem('password', password);
+        navigate('/'); // Redirect to Home
+      } else {
+        setError('Failed to update password: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Password Reset Error:', error);
+      setError('Failed to connect to the server: ' + error.message);
+    }
   };
 
   return (
     <div className="flex flex-wrap min-h-screen md:flex-row flex-col-reverse justify-around items-center p-2">
-      {/* Left Side: Image with Caption */}
-      <div className="md:w-1/2 w-full  bg-gray-100 dark:bg-gray-800 flex flex-col justify-center items-center p-10">
-      <h1 className="text-2xl font-semibold italic text-gray-800 dark:text-white mb-4 text-center font-serif">
-  Come find your path — do projects, build profiles, grow together.
-</h1>
-
+      <div className="md:w-1/2 w-full bg-gray-100 dark:bg-gray-800 flex flex-col justify-center items-center p-10">
+        <h1 className="text-2xl font-semibold italic text-gray-800 dark:text-white mb-4 text-center font-serif">
+          Come find your path — do projects, build profiles, grow together.
+        </h1>
         <img 
           src="https://img.freepik.com/premium-vector/woman-sitting-with-laptop-concept-illustration-working-studying-education-work-from-home-healthy-lifestyle_186332-153.jpg?w=360" 
           alt="Illustration" 
@@ -74,8 +106,7 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* Right Side: Login Card */}
-      <div className="md:w-1/2 w-full flex  justify-center items-center bg-gray-50 p-10">
+      <div className="md:w-1/2 w-full flex justify-center items-center bg-gray-50 p-10">
         {!showForgotPassword ? (
           <Card className="w-96 p-2">
             <CardHeader>
@@ -105,7 +136,7 @@ export default function LoginPage() {
                 <Button
                   type="button"
                   variant="link"
-                  className="p-0 text-success "
+                  className="p-0 text-success"
                   onClick={handleForgotPassword}
                 >
                   Forgot password?
