@@ -70,17 +70,9 @@ get http://localhost:4000/hello
 
 
 ###
-post http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/register
+get http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/feed
 Content-Type: application/json
 
 {
-    "username": "thanu",
-  "password": "thanu21",
-  "birthday": "2003-12-11",
-  "gender": "Female",
-  "email": "thanu@example.com",
-  "phoneNumber": "+91-9876543210",
-  "linkedIn": "https://linkedin.com/in/thanu",
-  "github": "https://github.com/thanu"
+    "userId": "6849688569aeaef02fcc09c5" 
 }
-

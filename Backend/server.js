@@ -39,7 +39,7 @@ const tutorials=require('./API/tutorials')
 // //when /userapi is path send to userApp
 app.use('/user',usersInfo)
 app.use('/projectinfo',projectInfo)
-app.use('/postinfo',postInfo)
+app.use('/post',postInfo)
 app.use('/tutorials',tutorials)
 //to extract biody of request
 

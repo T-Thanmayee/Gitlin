@@ -16,6 +16,8 @@ import HomeList from './pages/Home/HomeList';
 import Home from './pages/Home/Home';
 import FAQs from './pages/FooterAndNav/FAQs';
 import SearchResults from './pages/Home/SearchResults';
+import CreatePostui from './pages/Post/CreatePostui';
+import Postui from './pages/Post/Postui';
 import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
 function App() {
   useEffect(() => {
@@ -51,6 +53,15 @@ function App() {
                   path:'login',
                   element:<Login />
                 },
+                {
+                  path:'createpost',
+                  element:<CreatePostui />
+                },
+                {
+                  path:'post',
+                  element:<Postui />
+                },
+
                 {
                   path:'profile',
                   element:<StudentProfile />
