@@ -70,12 +70,30 @@ get http://localhost:4000/hello
 
 
 ###
-post http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/68496ba7fd8d7a00b70d983a/comment
-
+POST http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/68496c543d4eafc4cca108c7/comment
 Content-Type: application/json
 
 {
-     "userId":"6849686d69aeaef02fcc09c3",
-      "text": "Awesome demo! Can't wait to try it!",
-      "parentComment": null
+  "userId": "684806ed5e297d68ec3bec4e",
+  "text": "Thanks for sharing!",
+  "parentComment": null
 }
+
+###
+
+POST http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/68496c543d4eafc4cca108c7/like
+Content-Type: application/json
+
+{
+  "userId": "6849686d69aeaef02fcc09c3",
+  "weight": 1
+}
+
+### 
+
+GET http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/68496c543d4eafc4cca108c7
+Content-Type: application/json
+
+### Search Posts by User Name
+GET http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/search?name=Lisa Park
+Content-Type: application/json

@@ -1,21 +1,17 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const Post = require('../Schema/PostSchema');
 const Comment = require('../Schema/CommentSchema');
-const User = require('../Schema/Users'); // Assuming you have a User schema
+const User = require('../Schema/Users');
 const router = express.Router();
 
-
-
-// Create a new post (no authMiddleware)
+// Create a new post
 router.post('/', async (req, res) => {
   try {
     const { content, media, type, tags, userId } = req.body;
-    // Validate userId or use default (must exist in users collection)
     const validUserId = userId && mongoose.Types.ObjectId.isValid(userId)
       ? userId
-      : '667f1a2b3c4d5e6f78901234'; // Default to Sarah Chen's ID
+      : '667f1a2b3c4d5e6f78901234';
     const userExists = await User.findById(validUserId);
     if (!userExists) {
       return res.status(400).json({ error: 'Invalid or missing userId' });
@@ -39,12 +35,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Other routes (unchanged, included for context)
+// Get user feed
 router.get('/feed', async (req, res) => {
   try {
-    // Mock user for feed (replace with auth later)
     const user = await User.findById('667f1a2b3c4d5e6f78901234').select('following').lean();
-    const following = user.following || [];
+    const following = Array.isArray(user?.following) ? user.following : [];
     const posts = await Post.aggregate([
       {
         $match: {
@@ -100,6 +95,53 @@ router.get('/feed', async (req, res) => {
   }
 });
 
+// Search posts by user name
+router.get('/search', async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: 'Name query parameter is required' });
+    }
+    const users = await User.find({
+      name: { $regex: name, $options: 'i' }
+    }).select('_id').lean();
+    const userIds = users.map(user => user._id);
+    const posts = await Post.find({ user: { $in: userIds } })
+      .populate('user', 'name username avatar verified')
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to search posts', details: err.message });
+  }
+});
+
+// Get a single post
+router.get('/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid post ID' });
+    }
+    const post = await Post.findById(req.params.id)
+      .populate('user', 'name username avatar verified')
+      .populate({
+        path: 'comments',
+        populate: { path: 'user', select: 'name username avatar' }
+      })
+      .lean();
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json(post);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch post', details: err.message });
+  }
+});
+
+// Like a post
 router.post('/:id/like', async (req, res) => {
   try {
     const { weight = 1, userId } = req.body;
@@ -131,6 +173,7 @@ router.post('/:id/like', async (req, res) => {
   }
 });
 
+// Comment on a post
 router.post('/:id/comment', async (req, res) => {
   try {
     const { text, parentComment, userId } = req.body;
@@ -144,6 +187,9 @@ router.post('/:id/comment', async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
+    }
+    if (parentComment && !mongoose.Types.ObjectId.isValid(parentComment)) {
+      return res.status(400).json({ error: 'Invalid parentComment ID' });
     }
     const comment = new Comment({
       text,
@@ -164,53 +210,12 @@ router.post('/:id/comment', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id)
-      .populate('user', 'name username avatar verified')
-      .populate({
-        path: 'comments',
-        populate: { path: 'user', select: 'name username avatar' }
-      })
-      .lean();
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-    res.json(post);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch post', details: err.message });
-  }
-});
-
-router.get('/search', async (req, res) => {
-  try {
-    const { name } = req.query;
-    if (!name || typeof name !== 'string') {
-      return res.status(400).json({ error: 'Name query parameter is required' });
-    }
-    const users = await User.find({
-      name: { $regex: name, $options: 'i' }
-    }).select('_id').lean();
-    const userIds = users.map(user => user._id);
-    const posts = await Post.find({ user: { $in: userIds } })
-      .populate('user', 'name username avatar verified')
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
-    res.json(posts);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to search posts', details: err.message });
-  }
-});
-
+// Follow or unfollow a user
 router.post('/:id/follow', async (req, res) => {
   try {
-    const { userId } = req.body; // User who is performing the follow action
-    const targetUserId = req.params.id; // User to follow/unfollow
+    const { userId } = req.body;
+    const targetUserId = req.params.id;
 
-    // Validate userId and targetUserId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(targetUserId)) {
       return res.status(400).json({ error: 'Invalid userId or target user ID' });
     }
@@ -224,13 +229,11 @@ router.post('/:id/follow', async (req, res) => {
       return res.status(404).json({ error: 'User or target user not found' });
     }
 
-    // Initialize following array if null
-    if (!user.following) {
+    if (!Array.isArray(user.following)) {
       user.following = [];
     }
 
-    // Follow or unfollow
-    const isFollowing = user.following.includes(targetUserId);
+    const isFollowing = user.following.some(id => id.toString() === targetUserId);
     if (isFollowing) {
       user.following = user.following.filter(id => id.toString() !== targetUserId);
     } else {
@@ -247,4 +250,5 @@ router.post('/:id/follow', async (req, res) => {
     res.status(400).json({ error: 'Failed to update follow status', details: err.message });
   }
 });
+
 module.exports = router;
