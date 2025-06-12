@@ -4,8 +4,39 @@ const Post = require('../Schema/PostSchema');
 const Comment = require('../Schema/CommentSchema');
 const User = require('../Schema/Users');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX allowed.'));
+    }
+  }
+});
+
 
 // Create a new post
+// Create a text or media URL post
+
 router.post('/', async (req, res) => {
   try {
     const { content, media, type, tags, userId } = req.body;
@@ -17,12 +48,20 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or missing userId' });
     }
 
+    if (!content && !media) {
+      return res.status(400).json({ error: 'Content or media URL is required' });
+    }
+
+    if (type !== 'text') {
+      return res.status(400).json({ error: 'Invalid post type. Only text allowed.' });
+    }
+
     const post = new Post({
       user: validUserId,
-      content,
-      media,
+      content: content || null,
+      media: media || null,
       type: type || 'text',
-      tags: tags || []
+      tags: Array.isArray(tags) ? tags : []
     });
     await post.save();
     const populatedPost = await Post.findById(post._id)
@@ -38,7 +77,7 @@ router.post('/', async (req, res) => {
 // Get user feed
 router.get('/feed', async (req, res) => {
   try {
-    const user = await User.findById('667f1a2b3c4d5e6f78901234').select('following').lean();
+    const user = await User.findById('6849686d69aeaef02fcc09c3').select('following').lean();
     const following = Array.isArray(user?.following) ? user.following : [];
     const posts = await Post.aggregate([
       {
@@ -209,7 +248,41 @@ router.post('/:id/comment', async (req, res) => {
     res.status(400).json({ error: 'Failed to add comment', details: err.message });
   }
 });
+// Create a document post
+router.post('/doc', upload.single('file'), async (req, res) => {
+  try {
+    const { content, type, tags, userId } = req.body;
+    const validUserId = userId && mongoose.Types.ObjectId.isValid(userId)
+      ? userId
+      : '667f1a2b3c4d5e6f78901234';
+    const userExists = await User.findById(validUserId);
+    if (!userExists) {
+      return res.status(400).json({ error: 'Invalid or missing userId' });
+    }
 
+    if (!req.file) {
+      return res.status(400).json({ error: 'Document file is required' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    const post = new Post({
+      user: validUserId,
+      content: content || 'Document upload',
+      media: fileUrl,
+      type: type || 'document',
+      tags: tags ? JSON.parse(tags) : []
+    });
+    await post.save();
+    const populatedPost = await Post.findById(post._id)
+      .populate('user', 'name username avatar verified')
+      .lean();
+    res.status(201).json(populatedPost);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Failed to create document post', details: err.message });
+  }
+});
 // Follow or unfollow a user
 router.post('/:id/follow', async (req, res) => {
   try {

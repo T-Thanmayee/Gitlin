@@ -43,9 +43,6 @@ app.use('/post',postInfo)
 app.use('/tutorials',tutorials)
 //to extract biody of request
 
-
-
-
 // app.use((req,res,next)=>{
 //     res.sendFile(path.join(__dirname,'../webteam18/build/index.html'))
 //  })

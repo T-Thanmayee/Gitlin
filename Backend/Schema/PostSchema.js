@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-
-
 const postSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  content: { type: String, required: true, trim: true },
+  content: { type: String, required: true },
   media: { type: String, default: null }, // URL for image or video
   type: { type: String, enum: ['text', 'image', 'video'], default: 'text' },
   tags: [{ type: String, trim: true, lowercase: true }],

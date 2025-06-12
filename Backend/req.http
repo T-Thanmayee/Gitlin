@@ -97,3 +97,15 @@ Content-Type: application/json
 ### Search Posts by User Name
 GET http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/search?name=Lisa Park
 Content-Type: application/json
+
+###
+POST https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/post
+Content-Type: application/json
+
+{
+  "userId": "6849676869aeaef02fcc09bb",
+  "content": "Just shipped a new feature! 🚀 #ProductManagement",
+  "media": null,
+  "type": "text",
+  "tags": ["ProductManagement", "TeamWork"]
+}
