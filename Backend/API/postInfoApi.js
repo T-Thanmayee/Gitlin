@@ -228,7 +228,7 @@ router.post('/doc', upload.single('file'), async (req, res) => {
 // Other routes (feed, search, etc.) remain unchanged
 router.get('/feed', async (req, res) => {
   try {
-    const user = await User.findById('6849686d69aeaef02fcc09c3').select('following').lean();
+    const user = await User.findById('684ff0364ab94bd6ad1006ad').select('following').lean();
     const following = Array.isArray(user?.following) ? user.following : [];
     const posts = await Post.aggregate([
       {

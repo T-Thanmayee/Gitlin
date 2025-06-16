@@ -36,8 +36,8 @@ export default function CreatePostui() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const userId = "6849676869aeaef02fcc09bb"; // Mocked userId (Sarah Chen)
-  const baseUrl = "https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev";
+  const userId = "684ff902561fbc141c2f5137"; // Mocked userId (Sarah Chen)
+  const baseUrl = "https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev";
 
   const addPollOption = () => {
     setPollOptions([...pollOptions, ""]);
