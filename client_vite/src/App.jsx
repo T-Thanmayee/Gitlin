@@ -19,6 +19,7 @@ import SearchResults from './pages/Home/SearchResults';
 import CreatePostui from './pages/Post/CreatePostui';
 import Postui from './pages/Post/Postui';
 import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
+import { DetailedProfile } from './pages/ProfileUser/DetailedProfile';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -64,7 +65,7 @@ function App() {
 
                 {
                   path:'profile',
-                  element:<StudentProfile />
+                  element:<DetailedProfile />
                 },
                 {
                   path:'tutorials',
