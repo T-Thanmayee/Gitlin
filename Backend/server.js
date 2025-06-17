@@ -8,13 +8,23 @@ const cors = require('cors');
 
 // CORS configuration
 app.use(cors({
-  origin: [
-      'https://solid-sniffle-4jqqqqx79prv3j74w-5173.app.github.dev', // Alternative frontend origin
-    'http://localhost:5173', // Local development
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+     
+      'https://solid-sniffle-4jqqqqx79prv3j74w-5173.app.github.dev',
+      'https://literate-space-guide-9766rwg7rj5wh97qx-5173.app.github.dev', // Add this explicitly
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin || '*');
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // Support cookies/auth
+  credentials: true,
 }));
 
 // Explicitly handle OPTIONS preflight requests

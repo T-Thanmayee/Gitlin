@@ -19,7 +19,10 @@ import SearchResults from './pages/Home/SearchResults';
 import CreatePostui from './pages/Post/CreatePostui';
 import Postui from './pages/Post/Postui';
 import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
+import DisplayUserWithSearch from './pages/ProfileUser/DisplayUserWithSearch';
 import { DetailedProfile } from './pages/ProfileUser/DetailedProfile';
+import ProfilePage from './pages/ProfileUser/ProfilePage';
+import EditProfile from './pages/ProfileUser/EditProfile';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -65,15 +68,23 @@ function App() {
 
                 {
                   path:'profile',
-                  element:<DetailedProfile />
+                  element:<ProfilePage />
                 },
                 {
                   path:'tutorials',
                   element:<Tutorials/>
                 }   ,
                 {
+                  path:'edit/:userId',
+                  element:<EditProfile/>
+                },
+                {
                   path:'faqs',
                   element:<FAQs/>
+                },
+                {
+                  path:'users',
+                  element:<DisplayUserWithSearch/>
                 },
                 {
                   path:'search',

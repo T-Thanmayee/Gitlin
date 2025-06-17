@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Briefcase, MapPin, Link2, Mail } from "lucide-react"
+import { Briefcase, MapPin, Link2, Mail, Users } from "lucide-react"
 
 export function ProfessionalCard({
   name = "Sarah Johnson",
@@ -15,6 +15,7 @@ export function ProfessionalCard({
   website = "sarahjohnson.com",
   email = "sarah@example.com",
   onConnect,
+  isFollowing = false,
 }) {
   return (
     <Card className="overflow-hidden">
@@ -25,8 +26,14 @@ export function ProfessionalCard({
             <AvatarImage src={avatar || "/placeholder.svg"} alt={name} />
             <AvatarFallback>{name.charAt(0)}</AvatarFallback>
           </Avatar>
-          <Button variant="outline" size="sm" className="mt-auto" onClick={onConnect}>
-            Connect
+          <Button
+            variant={isFollowing ? "secondary" : "default"}
+            size="sm"
+            className="mt-auto"
+            onClick={onConnect}
+          >
+            <Users className="mr-2 h-4 w-4" />
+            {isFollowing ? "Following" : "Connect"}
           </Button>
         </div>
 

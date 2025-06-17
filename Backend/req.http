@@ -109,3 +109,49 @@ Content-Type: application/json
   "type": "text",
   "tags": ["ProductManagement", "TeamWork"]
 }
+
+###
+post https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/register
+Content-Type: application/json
+
+
+
+  {
+    "username": "sarahjohnson",
+    "password": "securepassword456",
+    "birthday": "1988-03-22",
+    "gender": "Female",
+    "personal": {
+      "name": "Sarah Johnson",
+      "title": "Marketing Director",
+      "company": "Global Innovations",
+      "location": "New York, NY",
+      "email": "sarah3.johnson@example.com",
+      "website": "sarahjohnson.com",
+      "avatar": "/placeholder.svg?height=150&width=150",
+      "bio": "Expert in digital marketing strategies."
+    },
+    "experience": [
+      {
+        "company": "Global Innovations",
+        "title": "Marketing Director",
+        "location": "New York, NY",
+        "startDate": "2017-06-01",
+        "endDate": "Present",
+        "description": "Leading marketing campaigns."
+      }
+    ],
+    "education": [
+      {
+        "institution": "NYU",
+        "degree": "MBA",
+        "field": "Marketing",
+        "startDate": "2010-09-01",
+        "endDate": "2012-06-01",
+        "description": "Focused on digital marketing."
+      }
+    ],
+    "skills": ["Digital Marketing", "SEO", "Content Strategy"]
+  }
+
+
