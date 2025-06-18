@@ -22,10 +22,10 @@ import {
   Send,
 } from "lucide-react"
 
-// Static posts data
+// Static posts data (unchanged)
 const staticPosts = [
   {
-    id: 1,
+    id: "1",
     user: {
       name: "Sarah Chen",
       title: "Senior Product Manager at Google",
@@ -43,7 +43,7 @@ const staticPosts = [
     commentsData: [],
   },
   {
-    id: 10,
+    id: "10",
     user: {
       name: "Tom Anderson",
       title: "Mobile App Developer",
@@ -62,7 +62,7 @@ const staticPosts = [
     commentsData: [],
   },
   {
-    id: 11,
+    id: "11",
     user: {
       name: "Sophie Turner",
       title: "Blockchain Developer at Coinbase",
@@ -113,6 +113,71 @@ export default function Postui() {
 
   const userId = "684ff0364ab94bd6ad1006ad"
   const API_BASE_URL = "https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/post"
+
+  const generateShareUrl = (postId) => {
+    return `${window.location.origin}/post/${postId}`
+  }
+
+  const handleShare = async (postId, content) => {
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
+
+    const shareUrl = generateShareUrl(postId)
+    const shareData = {
+      title: 'Check out this post!',
+      text: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+      url: shareUrl,
+    }
+
+    try {
+      // Optimistically update share count
+      setPosts(posts.map(p => p.id === postId ? { ...p, shares: p.shares + 1 } : p))
+
+      if (post.isStatic) {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareUrl)
+          alert("Link copied to clipboard!")
+        } else {
+          alert("Copy this link: " + shareUrl)
+        }
+        return
+      }
+
+      // Try Web Share API first
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData)
+        alert("Post shared successfully!")
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl)
+        alert("Link copied to clipboard!")
+      }
+
+      // Update backend
+      const response = await fetch(`${API_BASE_URL}/${postId}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update share count")
+      }
+
+      const updatedPost = await response.json()
+      setPosts(posts.map(p => p.id === postId ? {
+        ...p,
+        shares: updatedPost.shares || p.shares
+      } : p))
+    } catch (err) {
+      console.error('Share error:', err)
+      // Revert optimistic update
+      setPosts(posts.map(p => p.id === postId ? { ...p, shares: p.shares - 1 } : p))
+      alert("Failed to share post. Please try again.")
+    }
+  }
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -227,6 +292,7 @@ export default function Postui() {
         newLiked.add(postId)
       }
       setLikedPosts(newLiked)
+      alert("Failed to update like. Please try again.")
     }
   }
 
@@ -298,6 +364,7 @@ export default function Postui() {
       setCommentText({ ...commentText, [postId]: "" })
     } catch (err) {
       console.error(err)
+      alert("Failed to add comment. Please try again.")
     }
   }
 
@@ -314,9 +381,10 @@ export default function Postui() {
         throw new Error("Failed to update follow status")
       }
       const data = await response.json()
-      console.log(data.message)
+      alert(data.message)
     } catch (err) {
       console.error(err)
+      alert("Failed to update follow status. Please try again.")
     }
   }
 
@@ -363,7 +431,9 @@ export default function Postui() {
                   <DropdownMenuItem onClick={() => toggleSave(post.id)}>
                     {savedPosts.has(post.id) ? "Unsave post" : "Save post"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Copy link</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleShare(post.id, post.content)}>
+                    Copy link
+                  </DropdownMenuItem>
                   <DropdownMenuItem>Report post</DropdownMenuItem>
                   {!post.isStatic && (
                     <DropdownMenuItem onClick={() => handleFollow(post.user._id)}>
@@ -481,7 +551,12 @@ export default function Postui() {
                     <MessageCircle className="h-4 w-4" />
                     {post.comments}
                   </Button>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleShare(post.id, post.content)}
+                  >
                     <Share className="h-4 w-4" />
                     {post.shares}
                   </Button>
