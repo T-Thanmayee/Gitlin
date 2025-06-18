@@ -154,4 +154,17 @@ Content-Type: application/json
     "skills": ["Digital Marketing", "SEO", "Content Strategy"]
   }
 
+###
+POST https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors
+Content-Type: application/json
 
+{
+  "name": "John Doe",
+  "shortName": "johndoe",
+  "profileImage": "https://randomuser.me/api/portraits/men/32.jpg",
+  "rating": 4.5,
+  "skills": ["JavaScript", "React", "Node.js", "GraphQL", "CSS"],
+  "description": "Experienced web developer with over 10 years in the industry. Passionate about building scalable applications and mentoring junior developers.",
+  "experience": 10,
+  "price": 100
+}

@@ -1,18 +1,18 @@
 const express = require('express');
-const app = express();
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config();
-const port = process.env.PORT || 4000;
 const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+const port = process.env.PORT || 4000;
 
 // CORS configuration
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
-     
       'https://solid-sniffle-4jqqqqx79prv3j74w-5173.app.github.dev',
-      'https://literate-space-guide-9766rwg7rj5wh97qx-5173.app.github.dev', // Add this explicitly
+      'https://literate-space-guide-9766rwg7rj5wh97qx-5173.app.github.dev',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
@@ -28,7 +28,7 @@ app.use(cors({
 }));
 
 // Explicitly handle OPTIONS preflight requests
-app.options('*', cors()); // Ensure all routes respond to OPTIONS
+app.options('*', cors());
 
 // Log incoming requests for debugging
 app.use((req, res, next) => {
@@ -50,17 +50,21 @@ const usersInfo = require('./API/usersInfoApi');
 const projectInfo = require('./API/projectInfoApi');
 const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
+const mentorsRouter = require('./API/Mentor'); // Add mentor router
 
 app.use('/user', usersInfo);
 app.use('/projectinfo', projectInfo);
 app.use('/post', postInfo);
 app.use('/tutorials', tutorials);
+app.use('/mentors', mentorsRouter); // Add mentor routes
 
 // Test route
 app.get('/hello', (req, res) => {
   res.send('Welcome to the backend server');
 });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve static files from Uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
