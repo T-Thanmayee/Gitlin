@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Briefcase, MapPin, Link2, Mail, Users } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Briefcase, MapPin, Link2, Mail, Users } from "lucide-react";
 
 export function ProfessionalCard({
   name = "Sarah Johnson",
@@ -64,6 +64,12 @@ export function ProfessionalCard({
                 {email}
               </a>
             </div>
+            {/* Display "follow" if isFollowing is true */}
+            {isFollowing && (
+              <div className="mt-2">
+                <p className="text-sm text-muted-foreground">follow</p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -71,5 +77,5 @@ export function ProfessionalCard({
         <p>Available for new opportunities</p>
       </CardFooter>
     </Card>
-  )
+  );
 }

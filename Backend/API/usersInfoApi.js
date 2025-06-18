@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select(
-      'personal.name personal.title personal.company personal.location personal.avatar personal.website personal.email experience'
+      'personal.name following personal.title personal.company personal.location personal.avatar personal.website personal.email experience'
     );
     res.status(200).json({ message: 'Users fetched successfully', data: users });
   } catch (err) {

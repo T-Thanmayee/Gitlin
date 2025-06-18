@@ -1,88 +1,90 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ProfessionalCard } from './ProfessionCard';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { X, Search } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { ProfessionalCard } from "./ProfessionCard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { X, Search } from "lucide-react";
 
 export default function DisplayUserWithSearch() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
-    skills: '',
-    location: '',
-    company: '',
-    degree: '',
-    field: '',
+    skills: "",
+    location: "",
+    company: "",
+    degree: "",
+    field: "",
   });
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState([]);
-  const currentUserId = '68513ba087655694a9350b1b'; // Replace with auth system
+  const [following, setFollowing] = useState([]); // Store current user's following list
+  const currentUserId = "68513ba087655694a9350b1b"; // Replace with auth system
 
   useEffect(() => {
+    async function fetchCurrentUserFollowing() {
+      try {
+        const response = await fetch(
+          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${currentUserId}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setFollowing(data.data?.user?.following || []);
+        } else {
+          console.error("Failed to fetch current user's following:", data.error);
+        }
+      } catch (err) {
+        console.error("Network error fetching following:", err.message);
+      }
+    }
+
     async function fetchUsers() {
       setLoading(true);
       setError(null);
       try {
         const params = new URLSearchParams();
-        if (searchQuery) params.append('q', searchQuery);
-        if (filters.skills) params.append('skills', filters.skills);
-        if (filters.location) params.append('location', filters.location);
-        if (filters.company) params.append('company', filters.company);
-        if (filters.degree) params.append('degree', filters.degree);
-        if (filters.field) params.append('field', filters.field);
+        if (searchQuery) params.append("q", searchQuery);
+        if (filters.skills) params.append("skills", filters.skills);
+        if (filters.location) params.append("location", filters.location);
+        if (filters.company) params.append("company", filters.company);
+        if (filters.degree) params.append("degree", filters.degree);
+        if (filters.field) params.append("field", filters.field);
 
         const endpoint = params.toString()
           ? `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/search?${params}`
-          : 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/users';
+          : "https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/users";
 
         const response = await fetch(endpoint, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
         const data = await response.json();
         if (response.ok) {
-          setUsers(data.data);
+          setUsers(data.data || []);
         } else {
-          setError(data.error || 'Failed to fetch users');
+          setError(data.error || "Failed to fetch users");
         }
       } catch (err) {
-        setError('Network error: ' + err.message);
+        setError("Network error: " + err.message);
       } finally {
         setLoading(false);
       }
     }
 
-    async function fetchFollowing() {
-      try {
-        const response = await fetch(
-          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/${currentUserId}`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          setFollowing(data.data.user.following || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch following:', err);
-      }
-    }
-
     const timeoutId = setTimeout(() => {
+      fetchCurrentUserFollowing();
       fetchUsers();
-      fetchFollowing();
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, filters, currentUserId]);
+  }, [searchQuery, filters]);
 
   const handleConnect = async (targetUserId) => {
     setError(null);
@@ -90,20 +92,21 @@ export default function DisplayUserWithSearch() {
       const response = await fetch(
         `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/${targetUserId}/follow`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ userId: currentUserId }),
         }
       );
       const data = await response.json();
       if (response.ok) {
-        setFollowing(data.following || []);
+        // Update following list locally
+        setFollowing((prev) => [...prev, targetUserId]);
       } else {
-        setError(data.error || 'Failed to update follow status');
+        setError(data.error || "Failed to update follow status");
       }
     } catch (err) {
-      setError('Network error: ' + err.message);
+      setError("Network error: " + err.message);
     }
   };
 
@@ -112,8 +115,8 @@ export default function DisplayUserWithSearch() {
   };
 
   const clearSearchAndFilters = () => {
-    setSearchQuery('');
-    setFilters({ skills: '', location: '', company: '', degree: '', field: '' });
+    setSearchQuery("");
+    setFilters({ skills: "", location: "", company: "", degree: "", field: "" });
   };
 
   const isFiltered = searchQuery || Object.values(filters).some((v) => v);
@@ -139,40 +142,41 @@ export default function DisplayUserWithSearch() {
           <Input
             placeholder="Skills (e.g., React, Node.js)"
             value={filters.skills}
-            onChange={(e) => handleFilterChange('skills', e.target.value)}
+            onChange={(e) => handleFilterChange("skills", e.target.value)}
           />
           <Input
             placeholder="Location (e.g., Seattle, WA)"
             value={filters.location}
-            onChange={(e) => handleFilterChange('location', e.target.value)}
+            onChange={(e) => handleFilterChange("location", e.target.value)}
           />
           <Input
             placeholder="Company (e.g., TechInnovate)"
             value={filters.company}
-            onChange={(e) => handleFilterChange('company', e.target.value)}
+            onChange={(e) => handleFilterChange("company", e.target.value)}
           />
           <Input
             placeholder="Degree (e.g., Master of Science)"
             value={filters.degree}
-            onChange={(e) => handleFilterChange('degree', e.target.value)}
+            onChange={(e) => handleFilterChange("degree", e.target.value)}
           />
           <Input
             placeholder="Field (e.g., Computer Science)"
             value={filters.field}
-            onChange={(e) => handleFilterChange('field', e.target.value)}
+            onChange={(e) => handleFilterChange("field", e.target.value)}
           />
         </div>
 
         {isFiltered && (
           <div className="flex items-center gap-2 mt-2">
             <p className="text-sm text-muted-foreground">
-              Showing results for{' '}
+              Showing results for{" "}
               {searchQuery && <span className="font-semibold">name: "{searchQuery}"</span>}
               {Object.entries(filters)
                 .filter(([_, v]) => v)
                 .map(([k, v], i) => (
                   <span key={k} className="font-semibold">
-                    {searchQuery || i > 0 ? ', ' : ''}{k}: "{v}"
+                    {searchQuery || i > 0 ? ", " : ""}
+                    {k}: "{v}"
                   </span>
                 ))}
             </p>
@@ -202,7 +206,7 @@ export default function DisplayUserWithSearch() {
       {/* No Results */}
       {!loading && !error && users.length === 0 && (
         <div className="text-center p-4 text-muted-foreground">
-          No professionals found{isFiltered ? ' for applied filters' : ''}.
+          No professionals found{isFiltered ? " for applied filters" : ""}.
         </div>
       )}
 
@@ -212,7 +216,7 @@ export default function DisplayUserWithSearch() {
           {users.map((user) => {
             const experienceYears = user.experience.reduce((total, exp) => {
               const start = new Date(exp.startDate);
-              const end = exp.endDate === 'Present' ? new Date() : new Date(exp.endDate);
+              const end = exp.endDate === "Present" ? new Date() : new Date(exp.endDate);
               const years = (end - start) / (1000 * 60 * 60 * 24 * 365);
               return total + years;
             }, 0);
@@ -229,7 +233,7 @@ export default function DisplayUserWithSearch() {
                 website={user.personal.website}
                 email={user.personal.email}
                 onConnect={() => handleConnect(user._id)}
-                isFollowing={following.some((id) => id.toString() === user._id)}
+                isFollowing={following.includes(user._id)} // Check if user._id is in current user's following
               />
             );
           })}
