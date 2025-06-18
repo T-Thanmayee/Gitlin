@@ -262,7 +262,43 @@ router.get('/feed', async (req, res) => {
       },
       { $unwind: '$user' },
       {
+        $lookup: {
+          from: 'comments',
+          localField: 'comments',
+          foreignField: '_id',
+          as: 'comments',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user'
+              }
+            },
+            { $unwind: '$user' },
+            {
+              $project: {
+                _id: 1,
+                text: 1,
+                user: {
+                  _id: '$user._id',
+                  name: '$user.name',
+                  username: '$user.username',
+                  avatar: '$user.avatar',
+                  verified: '$user.verified'
+                },
+                createdAt: 1,
+                parentComment: 1
+              }
+            }
+          ]
+        }
+      },
+      {
         $project: {
+          _id: 1,
+          'user._id': 1,
           'user.name': 1,
           'user.username': 1,
           'user.avatar': 1,
