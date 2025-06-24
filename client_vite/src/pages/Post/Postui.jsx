@@ -119,7 +119,7 @@ export default function Postui() {
   const [error, setError] = useState(null);
   const [following, setFollowing] = useState([]);
 
-  const userId = "684ff0364ab94bd6ad1006ad"; // Current user ID for likes/comments
+  const userId = "68513ba087655694a9350b1"; // Current user ID for likes/comments
   const currentUserId = "68513ba087655694a9350b1b"; // Current user ID for following
   const API_BASE_URL = "https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev";
 
@@ -322,7 +322,7 @@ export default function Postui() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ userId, weight: 1 }),
+        body: JSON.stringify({ userId:currentUserId, weight: 1 }),
       });
 
       if (!response.ok) {
@@ -395,7 +395,7 @@ export default function Postui() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ text: commentText[postId], userId }),
+        body: JSON.stringify({ text: commentText[postId], userId: currentUserId }),
       });
 
       if (!response.ok) {

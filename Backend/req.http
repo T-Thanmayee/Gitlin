@@ -1,72 +1,3 @@
-post http://localhost:4000/postinfo/newpost
-Content-Type: application/json
-
-{
-    "username":"ravi234",
-    "profileIcon":"imagenotthere",
-    "designation":"full stack developer",
-    "description":{
-        "text":"i dont no why i am doing",
-        "images":[],
-        "videos":"",
-        "linkProject":"",
-        "likes":"",
-        "comments":[]
-    }
-}
-###
-
-post http://localhost:4000/projectinfo/newproject
-Content-Type: application/json
-
-{    
-    "projectId": "2024-03-23T11:50:00.006Z",
-    "username": "web_developer",
-    "projectName": "Blog Platform",
-    "description": "A platform for sharing content and stories",
-    "status": true,
-    "private": false
-,
-
-    "branches":[{}],
-    "mentor":"",
-    "Files":[
-        {
-            "nameOfFile":"",
-            "data":""
-        }
-    ]
-
-    
-}
-
-###
-post http://localhost:4000/tutorials/newtutorial
-Content-Type: application/json
-
-{
-        
-  "name": "Food Photography",
-        "domain": "Culinary Arts",
-        "trainer": "Photographer Laura Miller",
-        "paid": false,
-        "status": true,
-        "certificate": "Food Photography Mastery",
-        "link": "https://www.youtube.com/food-photography",
-        "description": "Learn how to capture stunning images of food with professional photography techniques."
-
-
-}
-
-
-
-###
-get http://localhost:4000/tutorials/alltutorials
-###
-get http://localhost:4000/usersinfo/userproject/ravi234
-
-###
-get http://localhost:4000/hello
 
 
 ###
@@ -116,6 +47,7 @@ Content-Type: application/json
 
 
 
+
   {
     "username": "sarahjohnson",
     "password": "securepassword456",
@@ -155,3 +87,104 @@ Content-Type: application/json
   }
 
 
+### 1. Check if project "AI Agriculture Assistant" can be uploaded
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+Content-Type: application/json
+
+
+{
+  "title": "AI Agriculture Assistant",
+  "user": "684ff0364ab94bd6ad1006ad",
+  "files": [
+    { "originalName": "index.js", "size": 3024 },
+    { "originalName": "README.md", "size": 1500 }
+  ]
+}
+
+###
+
+### 2. Check if project "Satellite Image Classifier" can be uploaded
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "Satellite Image Classifier",
+  "files": [
+    { "originalName": "classifier.py", "size": 10240 }
+  ]
+}
+
+###
+
+### 3. Check if project "Remote Team Chat App" can be uploaded
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "Remote Team Chat App",
+  "files": [
+    { "originalName": "chatApp.js", "size": 3400 }
+  ]
+}
+
+###
+
+### 4. Check if project "Smart Helmet Detector" can be uploaded
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "Smart Helmet Detector",
+  "files": [
+    { "originalName": "helmet.py", "size": 999999 }
+  ]
+}
+
+###
+
+### 5. Check if project "EduVerse - Online Learning Platform" can be uploaded
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "EduVerse - Online Learning Platform",
+  "files": [
+    { "originalName": "main.py", "size": 6000000 },
+    { "originalName": "requirements.txt", "size": 2048 }
+  ]
+}
+
+###
+
+### 6. Create a new project with file upload
+# ⚠️ REST Client doesn't support file uploads; simulate here with JSON only
+# You must use Postman/Thunder Client to upload actual files
+
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "title": "EduVerse - Online Learning Platform",
+  "description": "A web platform for online learning and collaboration.",
+  "technologies": "[\"React\", \"Node.js\", \"MongoDB\"]",
+  "features": "[\"Video conferencing\", \"Assignment upload\"]",
+  "lookingFor": "[\"Backend Developer\", \"UI Designer\"]",
+  "githubLink": "https://github.com/youruser/eduverse"
+}
+
+###
+
+### 7. Search projects by query
+GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/search?query=helmet
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 8. Get all projects of a specific user
+GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/user/YOUR_USER_ID
+Authorization: Bearer YOUR_TOKEN_HERE

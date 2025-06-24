@@ -52,7 +52,7 @@ const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
 
 app.use('/user', usersInfo);
-app.use('/projectinfo', projectInfo);
+app.use('/projects', projectInfo);
 app.use('/post', postInfo);
 app.use('/tutorials', tutorials);
 
