@@ -86,105 +86,70 @@ Content-Type: application/json
     "skills": ["Digital Marketing", "SEO", "Content Strategy"]
   }
 
-
-### 1. Check if project "AI Agriculture Assistant" can be uploaded
-POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
+### Create Project 1
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects
 Content-Type: application/json
 
 
 {
-  "title": "AI Agriculture Assistant",
-  "user": "684ff0364ab94bd6ad1006ad",
-  "files": [
-    { "originalName": "index.js", "size": 3024 },
-    { "originalName": "README.md", "size": 1500 }
-  ]
+  "title": "Smart Farming AI",
+  "user":{
+    "_id" : "684ff0364ab94bd6ad1006ad"},
+  
+  "description": "Uses AI to analyze soil and recommend crops.",
+  "technologies": "[\"TensorFlow\", \"React\"]",
+  "features": "[\"Crop prediction\", \"Soil analysis\"]",
+  "lookingFor": "[\"AI Engineer\", \"Frontend Developer\"]",
+  "githubLink": "https://github.com/kiran/smart-farming"
 }
 
 ###
 
-### 2. Check if project "Satellite Image Classifier" can be uploaded
-POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
-
-{
-  "title": "Satellite Image Classifier",
-  "files": [
-    { "originalName": "classifier.py", "size": 10240 }
-  ]
-}
-
-###
-
-### 3. Check if project "Remote Team Chat App" can be uploaded
-POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
-
-{
-  "title": "Remote Team Chat App",
-  "files": [
-    { "originalName": "chatApp.js", "size": 3400 }
-  ]
-}
-
-###
-
-### 4. Check if project "Smart Helmet Detector" can be uploaded
-POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
-
-{
-  "title": "Smart Helmet Detector",
-  "files": [
-    { "originalName": "helmet.py", "size": 999999 }
-  ]
-}
-
-###
-
-### 5. Check if project "EduVerse - Online Learning Platform" can be uploaded
-POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/check-upload
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
-
-{
-  "title": "EduVerse - Online Learning Platform",
-  "files": [
-    { "originalName": "main.py", "size": 6000000 },
-    { "originalName": "requirements.txt", "size": 2048 }
-  ]
-}
-
-###
-
-### 6. Create a new project with file upload
-# ⚠️ REST Client doesn't support file uploads; simulate here with JSON only
-# You must use Postman/Thunder Client to upload actual files
-
+### Create Project 2
 POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects
 Content-Type: application/json
 Authorization: Bearer YOUR_TOKEN_HERE
 
 {
-  "title": "EduVerse - Online Learning Platform",
-  "description": "A web platform for online learning and collaboration.",
-  "technologies": "[\"React\", \"Node.js\", \"MongoDB\"]",
-  "features": "[\"Video conferencing\", \"Assignment upload\"]",
-  "lookingFor": "[\"Backend Developer\", \"UI Designer\"]",
-  "githubLink": "https://github.com/youruser/eduverse"
+  "title": "EduVerse",
+   "user":{
+    "_id" : "68513ba087655694a9350b1b"},
+  
+  "description": "E-learning platform built with MERN stack.",
+  "technologies": "[\"MongoDB\", \"Express\", \"React\", \"Node.js\"]",
+  "features": "[\"Live classes\", \"Quiz system\"]",
+  "lookingFor": "[\"Backend Developer\"]",
+  "githubLink": "https://github.com/kiran/eduverse"
 }
 
 ###
 
-### 7. Search projects by query
-GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/search?query=helmet
+### Create Project 3
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects
+Content-Type: application/json
 Authorization: Bearer YOUR_TOKEN_HERE
 
-###
+{
+  "title": "Helmet Detection System",
+  "description": "Uses deep learning to detect helmet use in real time.",
+  "user":{
+    "_id" : "68513b0287655694a9350b08"},
+  
+  "technologies": "[\"OpenCV\", \"TensorFlow\"]",
+  "features": "[\"Live camera stream\", \"Helmet detection\"]",
+  "lookingFor": "[\"Computer Vision Engineer\"]",
+  "githubLink": "https://github.com/kiran/helmet-detection"
+}
+### Recommend based on user ID
+GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/68513b0287655694a9350b08
 
-### 8. Get all projects of a specific user
-GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/user/YOUR_USER_ID
-Authorization: Bearer YOUR_TOKEN_HERE
+### Add a collaborator to a project
+PUT https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/685a78aac27e35a97dd8ee5b/collaborators
+Content-Type: application/json
+
+
+{
+  "collaboratorId": "684ff7e8561fbc141c2f5131"
+}
+
+

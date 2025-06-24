@@ -4,7 +4,7 @@ const Project = require('../Schema/ProjectSchema');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
+const User = require('../Schema/Users'); 
 // Configure multer for local file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -26,123 +26,143 @@ const upload = multer({
   },
 });
 
-// POST /api/projects/check-upload
-// Check if project can be uploaded
-router.post('/check-upload', async (req, res) => {
+
+router.post('/', upload.array('files', 10), async (req, res) => {
   try {
-    const { title, files } = req.body; // Expected: files = [{ originalName, size }]
+    const { title, description, technologies, features, lookingFor, githubLink,user } = req.body;
 
-    // Validate title
-    if (!title) {
-      return res.status(400).json({ message: 'Project title is required' });
-    }
-    const existingProject = await Project.findOne({ title });
-    if (existingProject) {
-      return res.status(400).json({ message: 'Project title already exists' });
-    }
-
-    // Validate files
-    if (!files || !Array.isArray(files)) {
-      return res.status(400).json({ message: 'Files array is required' });
-    }
-    if (files.length > 10) {
-      return res.status(400).json({ message: 'Maximum 10 files allowed' });
-    }
-    for (const file of files) {
-      if (!file.originalName || !file.size) {
-        return res.status(400).json({ message: 'Each file must have originalName and size' });
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        return res.status(400).json({ message: `File ${file.originalName} exceeds 10MB limit` });
-      }
-    }
-
-    // Validate user
-    if (!req.user) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
-
-    res.status(200).json({ message: 'Project can be uploaded' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// POST /api/projects
-// Create a new project
-router.post('/',  upload.array('files', 10), async (req, res) => {
-  try {
-    const { title, description, technologies, features, lookingFor, githubLink } = req.body;
-    const files = req.files;
-
-    // Validate required fields
     if (!title || !description) {
       return res.status(400).json({ message: 'Title and description are required' });
     }
-
-    // Create file objects
-    const fileObjects = files.map(file => ({
+    let fileObjects=null
+    if(req.files){
+        fileObjects = req.files.map(file => ({
       path: file.path,
       originalName: file.originalname,
       size: file.size,
-      uploadedAt: new Date(),
-    }));
+    }) ) ;
+    }
+    
 
-    // Create project
     const project = new Project({
       title,
       description,
-      technologies: technologies ? JSON.parse(technologies) : [],
-      features: features ? JSON.parse(features) : [],
-      lookingFor: lookingFor ? JSON.parse(lookingFor) : [],
-      files: fileObjects,
-      owner: req.user._id,
+      technologies: JSON.parse(technologies || '[]'),
+      features: JSON.parse(features || '[]'),
+      lookingFor: JSON.parse(lookingFor || '[]'),
       githubLink,
+      owner: user._id,
+      files: fileObjects,
     });
 
     await project.save();
     res.status(201).json({ message: 'Project created successfully', project });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 // GET /api/projects/search
 // Search projects by title or description
 router.get('/search', async (req, res) => {
   try {
     const { query } = req.query;
-    if (!query) {
-      return res.status(400).json({ message: 'Search query is required' });
-    }
+    if (!query) return res.status(400).json({ message: 'Search query is required' });
 
     const projects = await Project.find(
       { $text: { $search: query } },
       { score: { $meta: 'textScore' } }
-    )
-      .sort({ score: { $meta: 'textScore' } })
-      .populate('owner', 'username avatar') // Adjust fields as per User schema
-      .limit(10);
+    ).sort({ score: { $meta: 'textScore' } });
 
     res.status(200).json({ projects });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 // GET /api/projects/user/:userId
 // Get projects by user
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+
     const projects = await Project.find({ owner: userId })
-      .populate('owner', 'username avatar') // Adjust fields as per User schema
+      .populate('owner', 'username avatar')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ projects });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+// Make sure path is correct
+
+router.get('/recommend/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Step 1: Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const skills = user.skills || [];
+    const educationKeywords = (user.education || []).map(e => `${e.field} ${e.degree}`).join(' ');
+
+    // Step 2: Construct query
+    const query = {
+      $or: [
+        { technologies: { $in: skills } },
+        { lookingFor: { $in: skills } },
+        { description: { $regex: educationKeywords, $options: 'i' } },
+        { title: { $regex: educationKeywords, $options: 'i' } }
+      ]
+    };
+
+    // Step 3: Fetch projects
+    const projects = await Project.find(query)
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    res.status(200).json({ projects });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+// Add a collaborator to a project
+router.put('/:projectId/collaborators', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { collaboratorId } = req.body;
+
+    if (!collaboratorId) {
+      return res.status(400).json({ message: 'Collaborator ID is required' });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    // Avoid duplicates
+    if (project.collaborators.includes(collaboratorId)) {
+      return res.status(400).json({ message: 'User is already a collaborator' });
+    }
+
+    project.collaborators.push(collaboratorId);
+    await project.save();
+
+    res.status(200).json({ message: 'Collaborator added successfully', project });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 module.exports = router;
