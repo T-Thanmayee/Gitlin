@@ -51,7 +51,7 @@ router.post('/', upload.array('files', 10), async (req, res) => {
       features: JSON.parse(features || '[]'),
       lookingFor: JSON.parse(lookingFor || '[]'),
       githubLink,
-      owner: user._id,
+      owner: user,
       files: fileObjects,
     });
 

@@ -1,9 +1,9 @@
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/sonner';
-import ImgMediaCard from './pages/ImgMediaCard'; 
+
 import RouteLayout from './pages/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
-import Fileupload from './pages/Fileupload';
+
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
 import '../aos-custom.css'; // Import your custom AOS CSS file here
@@ -23,6 +23,8 @@ import DisplayUserWithSearch from './pages/ProfileUser/DisplayUserWithSearch';
 import { DetailedProfile } from './pages/ProfileUser/DetailedProfile';
 import ProfilePage from './pages/ProfileUser/ProfilePage';
 import EditProfile from './pages/ProfileUser/EditProfile';
+import AddProjectForm from './pages/Project Folder/AddProjectForm';
+import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -40,15 +42,21 @@ function App() {
                  {
                    path:'',
                    element:<Home/>
+                },{
+                  path:'project',
+                  children:[
+                    {
+                      path:'addproject',
+                      element:<AddProjectForm />
+                    },
+                    {
+                      path:'search',
+                      element:<ProjectSearchPage />
+                    }
+                  ]
                 },
-                {
-                  path:'/project',
-                  element:<ImgMediaCard/>
-                },
-                {
-                  path:'Fileupload',
-                  element:<Fileupload/>
-                },
+                
+                
                 {
                   path:'register',
                   element:<Register/>
@@ -58,13 +66,17 @@ function App() {
                   element:<Login />
                 },
                 {
+                  path:'post',
+                  children:[ {
                   path:'createpost',
                   element:<CreatePostui />
                 },
                 {
                   path:'post',
                   element:<Postui />
-                },
+                },]
+                }
+               ,
 
                 {
                   path:'profile',
