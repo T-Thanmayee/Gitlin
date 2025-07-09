@@ -30,11 +30,11 @@ GET http://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/feed
 Content-Type: application/json
 
 ###
-POST https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/post
+POST https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post
 Content-Type: application/json
 
 {
-  "userId": "684ff0364ab94bd6ad1006ad",
+  "userId": "68513ba087655694a9350b1b",
   "content": "Just shipped a new feature! 🚀 #ProductManagement",
   "media": null,
   "type": "text",
@@ -141,7 +141,8 @@ Authorization: Bearer YOUR_TOKEN_HERE
   "githubLink": "https://github.com/kiran/helmet-detection"
 }
 ### Recommend based on user ID
-GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/68513b0287655694a9350b08
+GET https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/68513ba087655694a9350b1b
+
 
 ### Add a collaborator to a project
 PUT https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/685a78aac27e35a97dd8ee5b/collaborators

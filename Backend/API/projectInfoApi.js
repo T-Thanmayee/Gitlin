@@ -91,8 +91,8 @@ router.get('/user/:userId', async (req, res) => {
     const projects = await Project.find({ owner: userId })
       .populate('owner', 'username avatar')
       .sort({ createdAt: -1 });
-
-    res.status(200).json({ projects });
+    
+    res.status(200).json(projects );
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

@@ -5,7 +5,8 @@ import { toast } from "sonner"; // ✅ use sonner toast
 import CollabCard from "./CollabCard";
 
 const RecommendedProjectsPage = () => {
-  const { userId } = useParams();
+  const userId  = "68513ba087655694a9350b1b"
+
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +14,7 @@ const RecommendedProjectsPage = () => {
     const fetchRecommendedProjects = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/projects/recommend/${userId}`);
+        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/${userId}`);
         const data = await response.json();
         if (response.ok) {
           setProjects(data.projects);

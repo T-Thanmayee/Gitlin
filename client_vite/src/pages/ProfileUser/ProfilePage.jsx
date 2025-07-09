@@ -9,30 +9,53 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const currentUserId = '68513ba087655694a9350b1b'; // Replace with auth system
+  const baseUrl = 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(
-          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${currentUserId}`,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          setUserData({
-            personal: data.data.user.personal || {},
-            skills: data.data.user.skills || [],
-            experience: data.data.user.experience || [],
-            education: data.data.user.education || [],
-            posts: data.data.posts || [],
-            projects: data.data.projects || [],
-          });
-        } else {
-          setError(data.error || 'Failed to fetch data');
+        // Fetch user data
+        const userResponse = await fetch(`${baseUrl}/user/${currentUserId}`, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        const userData = await userResponse.json();
+        if (!userResponse.ok) {
+          throw new Error(userData.error || 'Failed to fetch user data');
         }
+
+        // Fetch user posts
+        const postResponse = await fetch(`${baseUrl}/post/${currentUserId}`, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        const postData = await postResponse.json();
+        if (!postResponse.ok) {
+          throw new Error(postData.error || 'Failed to fetch posts');
+        }
+        console.log('Post Data:', postData);
+
+        // Fetch user projects
+        const projectResponse = await fetch(`${baseUrl}/projects/user/${currentUserId}`, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        console.log("projectResponse:", projectResponse);
+        
+        const projectData = await projectResponse.json();
+        if (!projectResponse.ok) {
+          throw new Error(projectData.error || 'Failed to fetch projects');
+        }
+        console.log('Project Response:', projectResponse);
+        // Combine all data
+        setUserData({
+          personal: userData.data.user.personal || {},
+          skills: userData.data.user.skills || [],
+          experience: userData.data.user.experience || [],
+          education: userData.data.user.education || [],
+          posts: postData || [], // Adjust based on actual API response structure
+          projects: projectData || [], // Adjust based on actual API response structure
+        });
       } catch (err) {
         setError('Network error: ' + err.message);
       } finally {

@@ -348,7 +348,7 @@ router.get('/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid post ID' });
     }
-    const post = await Post.findById(req.params.id)
+    const post = await Post.find({user: req.params.id})
       .populate('user', 'name username avatar verified')
       .populate({
         path: 'comments',

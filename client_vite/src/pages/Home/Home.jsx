@@ -18,7 +18,7 @@ const App = () => {
   return (
     <div className=''>
     <HomeCarousel />
-   <CollabCard />
+  
     <FeatureCard/>
     <ProfessionalCard/>
     <MentorDisplayCard/>

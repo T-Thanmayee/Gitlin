@@ -1,10 +1,12 @@
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { toast } from "sonner"; // ✅ using sonner
+import { toast } from "sonner";
 import CollabCard from "./CollabCard";
+import RecommendedProjectsPage from "./RecommendedProjectsPage";
 
 const ProjectSearchPage = () => {
   const [query, setQuery] = useState("");
@@ -21,7 +23,11 @@ const ProjectSearchPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(
+        `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/search?query=${encodeURIComponent(
+          query
+        )}`
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -49,6 +55,10 @@ const ProjectSearchPage = () => {
       </div>
 
       <div className="relative z-10">
+        {/* Recommended Projects Section */}
+       
+
+        {/* Search Form and Results */}
         <form onSubmit={handleSearch} className="mb-8 flex gap-2 max-w-md mx-auto">
           <Input
             value={query}
@@ -92,6 +102,10 @@ const ProjectSearchPage = () => {
             )}
           </div>
         )}
+         <div className="mb-8">
+         
+          <RecommendedProjectsPage />
+        </div>
       </div>
     </motion.div>
   );

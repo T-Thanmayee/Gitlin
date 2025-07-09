@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CollabCard = ({ project }) => {
+  console.log("CollabCard project:", project);
   const {
     title,
     description,
