@@ -224,6 +224,7 @@ export default function DisplayUserWithSearch() {
             return (
               <ProfessionalCard
                 key={user._id}
+                id={user._id}
                 name={user.personal.name}
                 title={user.personal.title}
                 company={user.personal.company}

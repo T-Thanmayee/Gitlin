@@ -15,7 +15,7 @@ export default function ProfilePage() {
     async function fetchData() {
       try {
         // Fetch user data
-        const userResponse = await fetch(`${baseUrl}/user/${currentUserId}`, {
+        const userResponse = await fetch(`${baseUrl}/user/${userId}`, {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
@@ -36,7 +36,7 @@ export default function ProfilePage() {
         console.log('Post Data:', postData);
 
         // Fetch user projects
-        const projectResponse = await fetch(`${baseUrl}/projects/user/${currentUserId}`, {
+        const projectResponse = await fetch(`${baseUrl}/projects/user/${userId}`, {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });

@@ -1,22 +1,32 @@
 "use client";
 
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Briefcase, MapPin, Link2, Mail, Users } from "lucide-react";
 
 export function ProfessionalCard({
-  name = "Sarah Johnson",
-  title = "Marketing Director",
-  company = "Global Innovations",
-  location = "New York, NY",
-  avatar = "/placeholder.svg?height=100&width=100",
-  experience = 8,
-  website = "sarahjohnson.com",
-  email = "sarah@example.com",
+  id,
+  key,
+  name,
+  title,
+  company,
+  location,
+  avatar,
+  experience,
+  website,
+  email,
   onConnect,
-  isFollowing = false,
+  isFollowing,
 }) {
+  const navigate = useNavigate();
+
+  const handleViewProfile = (key) => {
+    console.log(key)
+    navigate(`/users/${key}`);
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="h-24 bg-gradient-to-r from-primary/20 to-primary/40"></div>
@@ -24,7 +34,7 @@ export function ProfessionalCard({
         <div className="relative -mt-12 flex justify-between">
           <Avatar className="h-24 w-24 border-4 border-background">
             <AvatarImage src={avatar || "/placeholder.svg"} alt={name} />
-            <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
           </Avatar>
           <Button
             variant={isFollowing ? "secondary" : "default"}
@@ -54,7 +64,12 @@ export function ProfessionalCard({
             </div>
             <div className="flex items-center">
               <Link2 className="mr-2 h-4 w-4 text-muted-foreground" />
-              <a href={`https://${website}`} className="text-primary hover:underline">
+              <a
+                href={`https://${website}`}
+                className="text-primary hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
                 {website}
               </a>
             </div>
@@ -64,12 +79,23 @@ export function ProfessionalCard({
                 {email}
               </a>
             </div>
-            {/* Display "follow" if isFollowing is true */}
+
             {isFollowing && (
               <div className="mt-2">
                 <p className="text-sm text-muted-foreground">follow</p>
               </div>
             )}
+          </div>
+
+          {/* View Profile Button */}
+          <div className="mt-4">
+            <Button
+              onClick={()=> handleViewProfile(id)}
+              variant="link"
+              className="text-blue-600 hover:underline p-0"
+            >
+              View Profile →
+            </Button>
           </div>
         </div>
       </CardContent>

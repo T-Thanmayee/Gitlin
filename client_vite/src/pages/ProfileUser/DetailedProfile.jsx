@@ -150,16 +150,20 @@ export function DetailedProfile({ data, userId, currentUserId }) {
               </div>
             </div>
             <div className="mt-4 flex gap-2 sm:mt-0">
-              {currentUserId && (
+              {currentUserId===userId && (
                 <Button variant="outline" onClick={() => navigate(`/edit/${currentUserId}`)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit Profile
                 </Button>
               )}
-              <Button>
+              {
+                currentUserId !== userId && (
+                <Button>
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Message
-              </Button>
+              </Button>)
+              }
+              
              
               <Button variant="ghost" size="icon">
                 <Share2 className="h-4 w-4" />

@@ -1,9 +1,7 @@
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/sonner';
-
 import RouteLayout from './pages/RouteLayout';
 import { createBrowserRouter,RouterProvider } from "react-router-dom";
-
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
 import '../aos-custom.css'; // Import your custom AOS CSS file here
@@ -79,7 +77,7 @@ function App() {
                ,
 
                 {
-                  path:'profile',
+                  path:'profile/:userId',
                   element:<ProfilePage />
                 },
                 {
@@ -96,7 +94,17 @@ function App() {
                 },
                 {
                   path:'users',
-                  element:<DisplayUserWithSearch/>
+                  children:[
+                    {
+                      path:'search',
+                     element:<DisplayUserWithSearch/>
+                    },
+                    {
+                      path:':userId',
+                      element:<ProfilePage/>
+                    }
+                    
+                  ]
                 },
                 {
                   path:'search',
