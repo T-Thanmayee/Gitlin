@@ -71,9 +71,9 @@ router.delete('/:shortName', asyncHandler(async (req, res) => {
 }));
 
 // Error handling middleware
-router.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+// router.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).json({ message: 'Something went wrong!' });
+// });
 
 module.exports = router;
