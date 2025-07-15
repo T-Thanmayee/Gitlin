@@ -62,7 +62,76 @@ router.post('/', upload.array('files', 10), async (req, res) => {
   }
 });
 
+router.put('/:id', upload.array('files', 10), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      technologies,
+      features,
+      lookingFor,
+      githubLink,
+      user,
+    } = req.body;
 
+    if (!title || !description) {
+      return res.status(400).json({ message: 'Title and description are required' });
+    }
+
+    // Build update object
+    const updateData = {
+      title,
+      description,
+      technologies: JSON.parse(technologies || '[]'),
+      features: JSON.parse(features || '[]'),
+      lookingFor: JSON.parse(lookingFor || '[]'),
+      githubLink,
+      owner: user,
+    };
+
+    // ✅ Only update `files` if new ones are uploaded
+    if (req.files && req.files.length > 0) {
+      const fileObjects = req.files.map(file => ({
+        path: file.path,
+        originalName: file.originalname,
+        size: file.size,
+      }));
+
+      updateData.files = fileObjects; // replace only if new files are sent
+    }
+
+    const updatedProject = await Project.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.status(200).json({
+      message: 'Project updated successfully',
+      project: updatedProject,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedProject = await Project.findByIdAndDelete(id);
+
+    if (!deletedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.status(200).json({ message: 'Project deleted successfully', project: deletedProject });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
 // GET /api/projects/search
 // Search projects by title or description
 router.get('/search', async (req, res) => {
@@ -136,10 +205,10 @@ router.get('/recommend/:userId', async (req, res) => {
   }
 });
 // Add a collaborator to a project
-router.put('/:projectId/collaborators', async (req, res) => {
+router.put('/:projectId/:collaboratorId', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { collaboratorId } = req.body;
+    const { collaboratorId } = req.params;
 
     if (!collaboratorId) {
       return res.status(400).json({ message: 'Collaborator ID is required' });

@@ -23,6 +23,7 @@ import ProfilePage from './pages/ProfileUser/ProfilePage';
 import EditProfile from './pages/ProfileUser/EditProfile';
 import AddProjectForm from './pages/Project Folder/AddProjectForm';
 import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
+import {Card3} from './pages/Project Folder/Card3';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -50,6 +51,10 @@ function App() {
                     {
                       path:'search',
                       element:<ProjectSearchPage />
+                    },
+                    {
+                      path:':id',
+                      element:<Card3 />
                     }
                   ]
                 },

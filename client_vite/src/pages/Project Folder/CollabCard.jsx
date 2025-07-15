@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Github,
@@ -10,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const CollabCard = ({ project }) => {
   console.log("CollabCard project:", project);
   const {
+    id,
     title,
     description,
     technologies = [],
@@ -18,6 +20,11 @@ const CollabCard = ({ project }) => {
     githubLink,
     owner,
   } = project;
+  const navigate = useNavigate();
+  const handleReadMore = () => {
+    navigate(`/project/${id}`, { state: { project } }); // pass full project as state
+  };
+  
 
   return (
     <motion.div
@@ -87,13 +94,14 @@ const CollabCard = ({ project }) => {
         )}
 
         <div className="mt-auto pt-4 flex justify-between items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-blue-200 rounded-2xl text-blue-600 hover:bg-blue-600 hover:text-white hover:border-white dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-900/20"
-          >
-            Read more
-          </Button>
+         <Button
+        onClick={handleReadMore}
+        variant="outline"
+        size="sm"
+        className="border-blue-200 rounded-2xl text-blue-600 hover:bg-blue-600 hover:text-white hover:border-white dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-900/20"
+      >
+        Read more
+      </Button>
           {githubLink && (
             <a
               href={githubLink}

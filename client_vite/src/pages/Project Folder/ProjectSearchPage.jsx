@@ -32,6 +32,7 @@ const ProjectSearchPage = () => {
 
       if (response.ok) {
         setProjects(data.projects);
+        console.log("Search results:", data.projects);
       } else {
         toast.error(`Error: ${data.message}`);
       }
@@ -85,6 +86,7 @@ const ProjectSearchPage = () => {
                 <CollabCard
                   key={project._id}
                   project={{
+                    id: project._id,
                     title: project.title,
                     description: project.description,
                     technologies: project.technologies,
@@ -92,6 +94,7 @@ const ProjectSearchPage = () => {
                     lookingFor: project.lookingFor,
                     githubLink: project.githubLink,
                     owner: project.owner,
+                    collaborators: project.collaborators,
                   }}
                 />
               ))
