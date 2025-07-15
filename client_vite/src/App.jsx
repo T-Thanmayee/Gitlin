@@ -23,6 +23,8 @@ import ProfilePage from './pages/ProfileUser/ProfilePage';
 import EditProfile from './pages/ProfileUser/EditProfile';
 import AddProjectForm from './pages/Project Folder/AddProjectForm';
 import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
+import RegisterMentor from './pages/ProfileUser/registermentor';
+import {Card3} from './pages/Project Folder/Card3';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -56,6 +58,10 @@ function App() {
                       element:<Card3 />
                     }
                   ]
+                },
+                 {
+                  path:'registermentor',
+                  element:<RegisterMentor/>
                 },
                 
                 
