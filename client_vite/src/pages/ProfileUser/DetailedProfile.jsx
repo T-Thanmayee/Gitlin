@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,13 +29,10 @@ import {
   ThumbsUp,
   Send,
   MoreHorizontal,
- 
   MessageCircle,
-  
-  
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Input} from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import CollabCard from "../Project Folder/CollabCard"; // Adjust the import path as necessary
 
@@ -108,6 +104,10 @@ export function DetailedProfile({ data, userId, currentUserId }) {
     console.log(`Sharing post ${postId}: ${content}`);
   };
 
+  const handleRegisterAsMentor = () => {
+    navigate('/registermentor');
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
       {/* Cover Image and Profile Header */}
@@ -150,21 +150,21 @@ export function DetailedProfile({ data, userId, currentUserId }) {
               </div>
             </div>
             <div className="mt-4 flex gap-2 sm:mt-0">
-              {currentUserId===userId && (
+              {currentUserId === userId && (
                 <Button variant="outline" onClick={() => navigate(`/edit/${currentUserId}`)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit Profile
                 </Button>
               )}
-              {
-                currentUserId !== userId && (
+              {currentUserId !== userId && (
                 <Button>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Message
-              </Button>)
-              }
-              
-             
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Message
+                </Button>
+              )}
+              <Button variant="outline" onClick={handleRegisterAsMentor}>
+                Register as Mentor
+              </Button>
               <Button variant="ghost" size="icon">
                 <Share2 className="h-4 w-4" />
               </Button>
@@ -381,7 +381,6 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                 )}
                               </div>
                             </div>
-                           
                           </div>
                         </CardHeader>
 
