@@ -17,6 +17,7 @@ import SearchResults from './pages/Home/SearchResults';
 import CreatePostui from './pages/Post/CreatePostui';
 import Postui from './pages/Post/Postui';
 import { MentorDisplayCard } from './pages/Mentor/MentorDisplayCards';
+import MentorChatPage from './pages/Mentor/MentorsDisplay';
 import DisplayUserWithSearch from './pages/ProfileUser/DisplayUserWithSearch';
 import { DetailedProfile } from './pages/ProfileUser/DetailedProfile';
 import ProfilePage from './pages/ProfileUser/ProfilePage';
@@ -128,6 +129,10 @@ function App() {
                 {
                   path:'mentors',
                   element:<MentorDisplayCard/>
+                }
+                ,{
+                  path:'mentorchat',
+                  element:<MentorChatPage/>
                 }
               ]
     }
