@@ -12,8 +12,6 @@ export default function RegisterMentor() {
   const [skills, setSkills] = useState([]);
   const [bio, setBio] = useState("");
   const [experience, setExperience] = useState("");
-  const [rating, setRating] = useState("");
-  const [hourlyRate, setHourlyRate] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
@@ -39,15 +37,13 @@ export default function RegisterMentor() {
     skills.forEach((skill) => formData.append("skills", skill));
     formData.append("bio", bio);
     formData.append("experience", experience);
-    formData.append("rating", rating);
-    formData.append("hourlyRate", hourlyRate);
 
     console.log("FormData contents:", Object.fromEntries(formData)); // Log form data for debugging
 
     try {
       const response = await fetch("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors", {
         method: "POST",
-        body:  formData,
+        body: formData,
         timeout: 10000, // 10 seconds timeout
       });
 
@@ -73,8 +69,6 @@ export default function RegisterMentor() {
       setSkills([]);
       setBio("");
       setExperience("");
-      setRating("");
-      setHourlyRate("");
       setError(null);
     } catch (err) {
       console.error("Error during submission:", err);
@@ -83,7 +77,7 @@ export default function RegisterMentor() {
       } else if (err.message.includes("Failed to fetch")) {
         setError("Network error. Check your internet connection or backend server.");
       } else {
-        setError(err.message);
+        setError("Sorry, registration failed: " + err.message);
       }
       setSuccess(false);
     }
@@ -166,32 +160,6 @@ export default function RegisterMentor() {
                 onChange={(e) => setExperience(e.target.value)}
                 min="0"
                 placeholder="Enter years of experience"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="rating" className="block font-semibold text-gray-600 mb-1">Rating</label>
-              <Input
-                id="rating"
-                type="number"
-                value={rating}
-                onChange={(e) => setRating(e.target.value)}
-                min="0"
-                max="5"
-                step="0.1"
-                placeholder="Enter your rating (0-5)"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="hourlyRate" className="block font-semibold text-gray-600 mb-1">Hourly Rate</label>
-              <Input
-                id="hourlyRate"
-                type="number"
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(e.target.value)}
-                min="0"
-                placeholder="Enter your hourly rate"
                 required
               />
             </div>
