@@ -45,9 +45,9 @@ export default function RegisterMentor() {
     console.log("FormData contents:", Object.fromEntries(formData)); // Log form data for debugging
 
     try {
-      const response = await fetch("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors", {
+      const response = await fetch("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors", {
         method: "POST",
-        body: formData,
+        body:  formData,
         timeout: 10000, // 10 seconds timeout
       });
 

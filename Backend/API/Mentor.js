@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const Mentor = require('../Schema/Mentor'); // Import the Mentor model
+const multer = require('multer');
+const Mentor = require('../Schema/Mentor');
 
-// Middleware for error handling
+// Configure multer for file upload
+const storage = multer.memoryStorage(); // or use diskStorage for saving to disk
+const upload = multer({ storage });
+
+// Middleware for async error handling
 const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// Routes
 // GET all mentors
 router.get('/', asyncHandler(async (req, res) => {
   const mentors = await Mentor.find().sort({ createdAt: -1 });
@@ -23,22 +27,29 @@ router.get('/:shortName', asyncHandler(async (req, res) => {
   res.json(mentor);
 }));
 
-// POST create new mentor
-router.post('/', asyncHandler(async (req, res) => {
-  const mentor = new Mentor({
-    name: req.body.name,
-    shortName: req.body.shortName,
-    profileImage: req.body.profileImage,
-    rating: req.body.rating,
-    skills: req.body.skills,
-    description: req.body.description,
-    experience: req.body.experience,
-    price: req.body.price
-  });
+// ✅ POST create new mentor (with file and FormData)
+router.post(
+  '/',
+  upload.single('profilePicture'), // handle image
+  asyncHandler(async (req, res) => {
+    console.log("Request Body:", req.body);
+    console.log("Uploaded File:", req.file);
 
-  const newMentor = await mentor.save();
-  res.status(201).json(newMentor);
-}));
+    const mentor = new Mentor({
+      name: req.body.name,
+      shortName: req.body.shortName,
+      profileImage: req.file ? req.file.buffer.toString('base64') : null, // Or save file path if using disk
+      rating: req.body.rating,
+      skills: Array.isArray(req.body['skills[]']) ? req.body['skills[]'] : [req.body['skills[]']], // handles array or single string
+      description: req.body.bio || req.body.description,
+      experience: req.body.experience,
+      price: req.body.hourlyRate,
+    });
+
+    const newMentor = await mentor.save();
+    res.status(201).json(newMentor);
+  })
+);
 
 // PUT update mentor
 router.put('/:shortName', asyncHandler(async (req, res) => {
@@ -69,11 +80,5 @@ router.delete('/:shortName', asyncHandler(async (req, res) => {
   await mentor.deleteOne();
   res.json({ message: 'Mentor deleted successfully' });
 }));
-
-// Error handling middleware
-// router.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).json({ message: 'Something went wrong!' });
-// });
 
 module.exports = router;

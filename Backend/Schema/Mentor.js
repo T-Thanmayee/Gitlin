@@ -4,12 +4,14 @@ const mongoose = require('mongoose');
 const mentorSchema = new mongoose.Schema({
   name: {
     type: String,
-    trim: true
+    trim: true,
+    required: true
   },
   shortName: {
     type: String,
     unique: true,
-    trim: true
+    trim: true,
+    required: true
   },
   profileImage: {
     type: String,
