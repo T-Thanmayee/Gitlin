@@ -36,7 +36,7 @@ export default function RegisterMentor() {
     formData.append("name", name);
     formData.append("shortName", shortName);
     if (profilePicture) formData.append("profilePicture", profilePicture);
-    skills.forEach((skill) => formData.append("skills[]", skill));
+    skills.forEach((skill) => formData.append("skills", skill));
     formData.append("bio", bio);
     formData.append("experience", experience);
     formData.append("rating", rating);

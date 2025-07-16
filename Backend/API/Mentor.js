@@ -40,7 +40,7 @@ router.post(
       shortName: req.body.shortName,
       profileImage: req.file ? req.file.buffer.toString('base64') : null, // Or save file path if using disk
       rating: req.body.rating,
-      skills: Array.isArray(req.body['skills[]']) ? req.body['skills[]'] : [req.body['skills[]']], // handles array or single string
+      skills: Array.isArray(req.body['skills']) ? req.body['skills'] : [req.body['skills']], // handles array or single string
       description: req.body.bio || req.body.description,
       experience: req.body.experience,
       price: req.body.hourlyRate,
