@@ -26,6 +26,7 @@ import AddProjectForm from './pages/Project Folder/AddProjectForm';
 import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
 import RegisterMentor from './pages/ProfileUser/registermentor';
 import {Card3} from './pages/Project Folder/Card3';
+import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 function App() {
   useEffect(() => {
     AOS.init({
@@ -90,7 +91,10 @@ function App() {
                 },]
                 }
                ,
-
+                {
+                  path:'chat',
+                  element:<LinkedInChatPage />
+                },
                 {
                   path:'profile/:userId',
                   element:<ProfilePage />
