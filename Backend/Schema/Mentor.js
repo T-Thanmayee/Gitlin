@@ -41,6 +41,10 @@ const mentorSchema = new mongoose.Schema({
     min: 0,
     default: 0
   },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
