@@ -29,7 +29,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  }
+  },
 });
 
 // CORS configuration for Express
@@ -76,12 +76,14 @@ const projectInfo = require('./API/projectInfoApi');
 const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
 const mentorsRouter = require('./API/Mentor');
+const chatroom = require('./API/Chatroom');
 
 app.use('/user', usersInfo);
 app.use('/projects', projectInfo);
 app.use('/post', postInfo);
 app.use('/tutorials', tutorials);
 app.use('/mentors', mentorsRouter);
+app.use('/chat', chatroom(io)); // Pass io to chatroom
 
 // Initialize Socket.IO for mentor routes
 mentorsRouter.setupSocket(io);

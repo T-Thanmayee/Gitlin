@@ -10,19 +10,31 @@ import io from "socket.io-client";
 import axios from "axios";
 
 export default function LinkedInChatPage({ userId }) {
+  console.log("LinkedInChatPage rendered with userId:", userId);
   const [searchQuery, setSearchQuery] = useState("");
   const [connections, setConnections] = useState([]);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Initialize Socket.IO and fetch initial data
   useEffect(() => {
+    if (!userId) {
+      setError("User ID is missing");
+      setLoading(false);
+      return;
+    }
+
     // Connect to Socket.IO server
-    socketRef.current = io("http://localhost:5000", { withCredentials: true }); // Adjust URL to your backend
+    socketRef.current = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev", {
+      withCredentials: true,
+    });
+    console.log("Socket.IO connecting...");
 
     // Emit user login
     socketRef.current.emit("userLogin", userId);
@@ -30,20 +42,37 @@ export default function LinkedInChatPage({ userId }) {
     // Fetch connections (followers)
     const fetchConnections = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/users/${userId}/followers`);
+        setLoading(true);
+        const response = await axios.get(
+          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/users/${userId}/followers`,
+          { withCredentials: true }
+        );
+        console.log("Fetched connections:", response.data);
         setConnections(response.data);
         if (response.data.length > 0) {
           setSelectedConnection(response.data[0]);
+        } else {
+          console.log("No connections found");
+          setError("No connections found");
         }
+        setError(null);
       } catch (error) {
-        console.error("Error fetching connections:", error);
+        console.error("Error fetching connections:", error.response?.data || error.message);
+        setError(error.response?.data?.message || "Failed to load connections");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchConnections();
 
     // Socket.IO event listeners
+    socketRef.current.on("connect", () => {
+      console.log("Socket.IO connected");
+    });
+
     socketRef.current.on("userStatus", ({ userId: id, status }) => {
+      console.log(`User ${id} is ${status}`);
       setConnections((prev) =>
         prev.map((conn) =>
           conn.id.toString() === id ? { ...conn, isOnline: status === "online" } : conn
@@ -52,12 +81,16 @@ export default function LinkedInChatPage({ userId }) {
     });
 
     socketRef.current.on("receiveMessage", (message) => {
+      console.log("Received message:", message);
       setMessages((prev) => [
         ...prev,
         {
           id: message._id,
           senderId: message.senderId,
-          senderName: message.senderId === userId ? "You" : connections.find((c) => c.id === message.senderId)?.name || "Unknown",
+          senderName:
+            message.senderId === userId
+              ? "You"
+              : connections.find((c) => c.id.toString() === message.senderId.toString())?.name || "Unknown",
           message: message.content,
           timestamp: new Date(message.timestamp).toLocaleTimeString(),
           isOwn: message.senderId === userId,
@@ -66,9 +99,18 @@ export default function LinkedInChatPage({ userId }) {
       setConnections((prev) =>
         prev.map((conn) =>
           conn.id.toString() === message.senderId && conn.id !== selectedConnection?.id
-            ? { ...conn, unreadCount: conn.unreadCount + 1, lastMessage: message.content, lastMessageTime: new Date(message.timestamp).toLocaleTimeString() }
+            ? {
+                ...conn,
+                unreadCount: conn.unreadCount + 1,
+                lastMessage: message.content,
+                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
+              }
             : conn.id === selectedConnection?.id
-            ? { ...conn, lastMessage: message.content, lastMessageTime: new Date(message.timestamp).toLocaleTimeString() }
+            ? {
+                ...conn,
+                lastMessage: message.content,
+                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
+              }
             : conn
         )
       );
@@ -76,21 +118,29 @@ export default function LinkedInChatPage({ userId }) {
 
     socketRef.current.on("typing", ({ senderId, receiverId, isTyping: typing }) => {
       if (receiverId === userId && senderId === selectedConnection?.id) {
+        console.log(`${senderId} is ${typing ? "typing" : "not typing"}`);
         setIsTyping((prev) => ({ ...prev, [senderId]: typing }));
       }
     });
 
     socketRef.current.on("messagesRead", ({ userId: receiverId, receiverId: senderId }) => {
       if (senderId === selectedConnection?.id) {
+        console.log(`Messages from ${senderId} marked as read`);
         setConnections((prev) =>
           prev.map((conn) => (conn.id === senderId ? { ...conn, unreadCount: 0 } : conn))
         );
       }
     });
 
+    socketRef.current.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+      setError("Failed to connect to chat server");
+    });
+
     // Cleanup on unmount
     return () => {
       socketRef.current.disconnect();
+      console.log("Socket.IO disconnected");
     };
   }, [userId]);
 
@@ -99,19 +149,25 @@ export default function LinkedInChatPage({ userId }) {
     if (selectedConnection) {
       const fetchMessages = async () => {
         try {
+          setLoading(true);
           const response = await axios.get(
-            `http://localhost:5000/api/messages/${userId}/${selectedConnection.id}`
+            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/messages/${userId}/${selectedConnection.id}`,
+            { withCredentials: true }
           );
+          console.log("Fetched messages:", response.data);
           setMessages(response.data);
-          // Mark messages as read
           socketRef.current.emit("markMessagesRead", { userId, receiverId: selectedConnection.id });
           setConnections((prev) =>
             prev.map((conn) =>
               conn.id === selectedConnection.id ? { ...conn, unreadCount: 0 } : conn
             )
           );
+          setError(null);
         } catch (error) {
-          console.error("Error fetching messages:", error);
+          console.error("Error fetching messages:", error.response?.data || error.message);
+          setError(error.response?.data?.message || "Failed to load messages");
+        } finally {
+          setLoading(false);
         }
       };
       fetchMessages();
@@ -140,6 +196,7 @@ export default function LinkedInChatPage({ userId }) {
 
   const handleSendMessage = () => {
     if (newMessage.trim() && selectedConnection) {
+      console.log("Sending message:", { senderId: userId, receiverId: selectedConnection.id, content: newMessage });
       socketRef.current.emit("sendMessage", {
         senderId: userId,
         receiverId: selectedConnection.id,
@@ -184,6 +241,11 @@ export default function LinkedInChatPage({ userId }) {
 
         {/* Connections List */}
         <div className="flex-1 overflow-y-auto">
+          {loading && <p className="p-4 text-gray-500">Loading connections...</p>}
+          {error && <p className="p-4 text-red-500">{error}</p>}
+          {!loading && !error && filteredConnections.length === 0 && (
+            <p className="p-4 text-gray-500">No connections found</p>
+          )}
           {filteredConnections.map((connection) => (
             <div
               key={connection.id}
@@ -228,7 +290,7 @@ export default function LinkedInChatPage({ userId }) {
                       {isTyping[connection.id] ? (
                         <span className="text-blue-500 italic">typing...</span>
                       ) : (
-                        connection.lastMessage
+                        connection.lastMessage || "No messages yet"
                       )}
                     </p>
                   </div>
@@ -241,8 +303,7 @@ export default function LinkedInChatPage({ userId }) {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Chat Header */}
-        {selectedConnection && (
+        {selectedConnection ? (
           <>
             <div className="bg-white border-b border-gray-200 p-4">
               <div className="flex items-center justify-between">
@@ -285,9 +346,13 @@ export default function LinkedInChatPage({ userId }) {
               </div>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
               <div className="space-y-4 max-w-4xl mx-auto">
+                {loading && <p className="text-gray-500">Loading messages...</p>}
+                {error && <p className="text-red-500">{error}</p>}
+                {!loading && !error && messages.length === 0 && (
+                  <p className="text-gray-500">No messages yet</p>
+                )}
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}>
@@ -308,7 +373,6 @@ export default function LinkedInChatPage({ userId }) {
               </div>
             </div>
 
-            {/* Message Input */}
             <div className="bg-white border-t border-gray-200 p-4">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-end gap-3">
@@ -341,6 +405,10 @@ export default function LinkedInChatPage({ userId }) {
               </div>
             </div>
           </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <p className="text-gray-500">Select a connection to start chatting</p>
+          </div>
         )}
       </div>
     </div>

@@ -1,19 +1,11 @@
 const express = require('express');
-const socketIo = require('socket.io');
 const mongoose = require('mongoose');
-const User = require('./models/User'); // Assuming User.js is in models folder
-const Message = mongoose.model('Message'); // Assuming Message model is already defined elsewhere
+const User = require('../Schema/Users'); // Adjust path to match your User.js
+const Message = mongoose.model('Message'); // Assuming Message model is already defined
 
 const router = express.Router();
 
-module.exports = function initializeChat(server) {
-  const io = socketIo(server, {
-    cors: {
-      origin: 'http://localhost:3000', // Adjust to match your frontend URL (e.g., Next.js default port)
-      methods: ['GET', 'POST'],
-    },
-  });
-
+module.exports = function initializeChat(io) {
   // Store online users
   const onlineUsers = new Map(); // Map<userId, socketId>
 
@@ -23,6 +15,7 @@ module.exports = function initializeChat(server) {
 
     // User login
     socket.on('userLogin', (userId) => {
+      console.log('User logged in:', userId);
       onlineUsers.set(userId, socket.id);
       io.emit('userStatus', { userId, status: 'online' });
     });
@@ -55,12 +48,13 @@ module.exports = function initializeChat(server) {
     socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
       try {
         const message = new Message({
-          sender: senderId,
-          receiver: receiverId,
+          senderId: senderId,
+          receiverId: receiverId,
           content,
-          read: false, // Assuming your Message schema has a 'read' field
+          read: false,
         });
         await message.save();
+        console.log('Message saved:', { senderId, receiverId, content });
 
         const receiverSocketId = onlineUsers.get(receiverId);
         if (receiverSocketId) {
@@ -92,7 +86,7 @@ module.exports = function initializeChat(server) {
     socket.on('markMessagesRead', async ({ userId, receiverId }) => {
       try {
         await Message.updateMany(
-          { sender: receiverId, receiver: userId, read: false },
+          { senderId: receiverId, receiverId: userId, read: false },
           { $set: { read: true } }
         );
         io.emit('messagesRead', { userId, receiverId });
@@ -105,34 +99,38 @@ module.exports = function initializeChat(server) {
   // Route to get followers with online/offline status and unread count
   router.get('/users/:userId/followers', async (req, res) => {
     try {
-      const user = await User.findById(req.params.userId)
+      const userId = req.params.userId;
+      console.log('Fetching followers for userId:', userId);
+      const user = await User.findById(userId)
         .populate('following', 'username personal.name personal.title personal.avatar')
         .select('following');
-      
+      console.log('Fetched user:', user);
+
       if (!user) {
+        console.log('User not found for userId:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
 
       const followersWithStatus = await Promise.all(user.following.map(async (follower) => {
         const unreadCount = await Message.countDocuments({
-          sender: follower._id,
-          receiver: req.params.userId,
+          senderId: follower._id,
+          receiverId: userId,
           read: false,
         });
         const lastMessage = await Message.findOne({
           $or: [
-            { sender: follower._id, receiver: req.params.userId },
-            { sender: req.params.userId, receiver: follower._id },
+            { senderId: follower._id, receiverId: userId },
+            { senderId: userId, receiverId: follower._id },
           ],
         })
           .sort({ timestamp: -1 })
           .select('content timestamp');
 
         return {
-          id: follower._id,
-          name: follower.personal.name,
-          title: follower.personal.title,
-          avatar: follower.personal.avatar,
+          id: follower._id.toString(),
+          name: follower.personal.name || 'Unknown',
+          title: follower.personal.title || '',
+          avatar: follower.personal.avatar || '/placeholder.svg',
           isOnline: onlineUsers.has(follower._id.toString()),
           lastMessage: lastMessage ? lastMessage.content : '',
           lastMessageTime: lastMessage ? new Date(lastMessage.timestamp).toLocaleTimeString() : '',
@@ -141,39 +139,61 @@ module.exports = function initializeChat(server) {
         };
       }));
 
+      console.log('Followers response:', followersWithStatus);
       res.json(followersWithStatus);
     } catch (error) {
       console.error('Error fetching followers:', error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
   });
 
   // Route to get chat history between two users
-  router.get('/messages/:userId/:receiverId', async (req, res) => {
-    try {
-      const { userId, receiverId } = req.params;
-      const messages = await Message.find({
-        $or: [
-          { sender: userId, receiver: receiverId },
-          { sender: receiverId, receiver: userId },
-        ],
-      })
-        .populate('sender', 'username personal.name personal.avatar')
-        .sort('timestamp');
+  const User = require('../Schema/Users');
 
-      res.json(messages.map((msg) => ({
-        id: msg._id,
-        senderId: msg.sender._id,
-        senderName: msg.sender.personal.name,
-        message: msg.content,
-        timestamp: new Date(msg.timestamp).toLocaleTimeString(),
-        isOwn: msg.sender._id.toString() === userId,
-      })));
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+router.get('/messages/:userId/:receiverId', async (req, res) => {
+  try {
+    const { userId, receiverId } = req.params;
+    console.log('Fetching messages between userId:', userId, 'and receiverId:', receiverId);
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: userId },
+      ],
+    }).sort('createdAt');
+
+    // Get unique senderIds from the messages
+    const senderIds = [...new Set(messages.map(m => m.senderId))];
+
+    // Fetch sender info from User collection
+    const users = await User.find({ _id: { $in: senderIds.map(id => mongoose.Types.ObjectId(id)) } });
+
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user._id.toString()] = {
+        name: user.personal?.name || 'Unknown',
+        avatar: user.personal?.avatar || '',
+      };
+    });
+
+    const formattedMessages = messages.map((msg) => ({
+      id: msg._id.toString(),
+      senderId: msg.senderId,
+      senderName: userMap[msg.senderId]?.name || 'Unknown',
+      senderAvatar: userMap[msg.senderId]?.avatar || '',
+      message: msg.content,
+      timestamp: new Date(msg.createdAt).toLocaleTimeString(),
+      isOwn: msg.senderId === userId,
+    }));
+
+    console.log('Messages response:', formattedMessages);
+    res.json(formattedMessages);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
   return router;
 };

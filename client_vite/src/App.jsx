@@ -28,7 +28,7 @@ import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
 import RegisterMentor from './pages/ProfileUser/registermentor';
 import { Card3 } from './pages/Project Folder/Card3';
 import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
-
+const userId="68513ba087655694a9350b1b"
 function App() {
   useEffect(() => {
     AOS.init({
@@ -92,7 +92,7 @@ function App() {
         },
         {
           path: 'chat',
-          element: <LinkedInChatPage />
+          element: <LinkedInChatPage userId={userId} />
         },
         {
           path: 'profile/:userId',
