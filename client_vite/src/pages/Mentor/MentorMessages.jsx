@@ -11,7 +11,7 @@ import io from "socket.io-client"
 import { toast } from "sonner"
 
 // Initialize Socket.IO client
-const socket = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev", { withCredentials: true })
+const socket = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/", { withCredentials: true })
 
 export default function MentorMessages() {
   const [users, setUsers] = useState([])
@@ -20,14 +20,14 @@ export default function MentorMessages() {
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const mentorId = "507f1f77bcf86cd799439011" // Replace with your mentor's ObjectId
+  const mentorId = "6877d6f580b7beac37c9fb99" // Replace with your mentor's ObjectId
 
   // Fetch users who messaged the mentor
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true)
       try {
-        const response = await axios.get(`https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}/messages/users`)
+        const response = await axios.get(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}/messages/users`)
         console.log("Fetched users:", response.data)
         setUsers(response.data)
         setError(null)
@@ -96,7 +96,7 @@ export default function MentorMessages() {
         setLoading(true)
         try {
           const response = await axios.get(
-            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${selectedUser.mentorShortName}/chat?userId=${selectedUser.userId}`
+            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${selectedUser.mentorShortName}/chat?userId=${selectedUser.userId}`
           )
           console.log("Fetched chat history:", response.data)
           setMessages(response.data)
@@ -119,7 +119,7 @@ export default function MentorMessages() {
 
   const handleUserClick = async (user) => {
     try {
-      const mentor = await axios.get(`https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}`)
+      const mentor = await axios.get(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}`)
       setSelectedUser({ ...user, mentorShortName: mentor.data.shortName })
     } catch (error) {
       console.error("Error fetching mentor shortName:", error)
@@ -276,4 +276,4 @@ export default function MentorMessages() {
       </div>
     </div>
   )
-}f
+}

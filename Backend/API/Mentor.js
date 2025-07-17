@@ -146,64 +146,71 @@ router.get('/:shortName/chat', asyncHandler(async (req, res) => {
 // GET users who messaged the mentor with their latest message
 router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
   const { mentorId } = req.params;
-  if (!mongoose.isValidObjectId(mentorId)) {
-    return res.status(400).json({ message: 'Invalid Mentor ID format' });
-  }
 
   const mentor = await Mentor.findById(mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
+ 
 
   const userMessages = await Message.aggregate([
-    {
-      $match: {
-        $or: [
-          { receiverId: new mongoose.Types.ObjectId(mentorId) },
-          { senderId: new mongoose.Types.ObjectId(mentorId) }
+  {
+    $match: {
+      $or: [
+        { receiverId: mentorId },
+        { senderId: mentorId }
+      ]
+    }
+  },
+  { $sort: { createdAt: -1 } },
+  {
+    $addFields: {
+      otherUserId: {
+        $cond: [
+          { $eq: ['$senderId', mentorId] },
+          '$receiverId',
+          '$senderId'
         ]
       }
-    },
-    {
-      $sort: { createdAt: -1 }
-    },
-    {
-      $group: {
-        _id: {
-          $cond: [
-            { $eq: ['$senderId', new mongoose.Types.ObjectId(mentorId)] },
-            '$receiverId',
-            '$senderId'
-          ]
-        },
-        latestMessage: { $first: '$content' },
-        latestMessageTime: { $first: '$createdAt' }
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'user'
-      }
-    },
-    {
-      $unwind: '$user'
-    },
-    {
-      $project: {
-        userId: '$_id',
-        username: '$user.username',
-        email: '$user.email',
-        latestMessage: 1,
-        latestMessageTime: 1
-      }
     }
-  ]);
+  },
+  {
+    $group: {
+      _id: '$otherUserId',
+      latestMessage: { $first: '$content' },
+      latestMessageTime: { $first: '$createdAt' }
+    }
+  },
+  {
+    $lookup: {
+      from: 'users',
+      let: { uid: { $toObjectId: '$_id' } },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $eq: ['$_id', '$$uid'] }
+          }
+        }
+      ],
+      as: 'user'
+    }
+  },
+  { $unwind: '$user' },
+  {
+    $project: {
+      userId: '$_id',
+      username: '$user.username',
+      email: '$user.personal.email',
+      latestMessage: 1,
+      latestMessageTime: 1
+    }
+  }
+]);
+
 
   res.json(userMessages);
 }));
+
 
 module.exports = router;
 

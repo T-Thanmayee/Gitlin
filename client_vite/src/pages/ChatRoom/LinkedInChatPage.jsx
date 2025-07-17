@@ -1,172 +1,166 @@
-"use client"
+"use client";
 
+import { useState, useEffect, useRef } from "react";
+import { Search, Send, MoreHorizontal, Phone, Video, Info, Paperclip, Smile, ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import io from "socket.io-client";
+import axios from "axios";
 
-import { useState } from "react"
-import { Search, Send, MoreHorizontal, Phone, Video, Info, Paperclip, Smile, ImageIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+export default function LinkedInChatPage({ userId }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [connections, setConnections] = useState([]);
+  const [selectedConnection, setSelectedConnection] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isTyping, setIsTyping] = useState({});
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-const connections = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    title: "Senior Frontend Developer at Google",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "Thanks for connecting! Would love to discuss React best practices.",
-    lastMessageTime: "2m",
-    unreadCount: 2,
-    isTyping: false,
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    title: "Product Manager at Microsoft",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "The project timeline looks good. Let's schedule a call.",
-    lastMessageTime: "15m",
-    unreadCount: 0,
-    isTyping: true,
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    title: "UX Designer at Airbnb",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-    lastMessage: "I've reviewed your portfolio. Impressive work!",
-    lastMessageTime: "1h",
-    unreadCount: 1,
-    isTyping: false,
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    title: "Data Scientist at Netflix",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "The machine learning model is performing well in production.",
-    lastMessageTime: "2h",
-    unreadCount: 0,
-    isTyping: false,
-  },
-  {
-    id: 5,
-    name: "Lisa Thompson",
-    title: "VP of Engineering at Stripe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-    lastMessage: "Great meeting you at the conference. Let's stay in touch!",
-    lastMessageTime: "1d",
-    unreadCount: 0,
-    isTyping: false,
-  },
-  {
-    id: 6,
-    name: "Alex Parker",
-    title: "DevOps Engineer at Amazon",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "The deployment pipeline is working smoothly now.",
-    lastMessageTime: "2d",
-    unreadCount: 0,
-    isTyping: false,
-  },
-  {
-    id: 7,
-    name: "Jennifer Wu",
-    title: "Marketing Director at Spotify",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-    lastMessage: "Love your insights on digital marketing trends!",
-    lastMessageTime: "3d",
-    unreadCount: 0,
-    isTyping: false,
-  },
-  {
-    id: 8,
-    name: "Robert Martinez",
-    title: "CTO at Shopify",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "Would you be interested in a technical leadership role?",
-    lastMessageTime: "1w",
-    unreadCount: 3,
-    isTyping: false,
-  },
-]
+  // Initialize Socket.IO and fetch initial data
+  useEffect(() => {
+    // Connect to Socket.IO server
+    socketRef.current = io("http://localhost:5000", { withCredentials: true }); // Adjust URL to your backend
 
-const sampleMessages = [
-  {
-    id: 1,
-    senderId: 1,
-    senderName: "Sarah Johnson",
-    message: "Hi! Thanks for connecting with me on LinkedIn.",
-    timestamp: "10:30 AM",
-    isOwn: false,
-  },
-  {
-    id: 2,
-    senderId: "me",
-    senderName: "You",
-    message: "Thanks for accepting! I really admire your work at Google.",
-    timestamp: "10:32 AM",
-    isOwn: true,
-  },
-  {
-    id: 3,
-    senderId: 1,
-    senderName: "Sarah Johnson",
-    message: "That's very kind of you to say! I saw your profile and your React projects look impressive.",
-    timestamp: "10:35 AM",
-    isOwn: false,
-  },
-  {
-    id: 4,
-    senderId: "me",
-    senderName: "You",
-    message: "Thank you! I've been working with React for about 3 years now. Always learning something new.",
-    timestamp: "10:37 AM",
-    isOwn: true,
-  },
-  {
-    id: 5,
-    senderId: 1,
-    senderName: "Sarah Johnson",
-    message: "Thanks for connecting! Would love to discuss React best practices.",
-    timestamp: "10:40 AM",
-    isOwn: false,
-  },
-]
+    // Emit user login
+    socketRef.current.emit("userLogin", userId);
 
-export default function LinkedInChatPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedConnection, setSelectedConnection] = useState(connections[0])
-  const [newMessage, setNewMessage] = useState("")
+    // Fetch connections (followers)
+    const fetchConnections = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/users/${userId}/followers`);
+        setConnections(response.data);
+        if (response.data.length > 0) {
+          setSelectedConnection(response.data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching connections:", error);
+      }
+    };
+
+    fetchConnections();
+
+    // Socket.IO event listeners
+    socketRef.current.on("userStatus", ({ userId: id, status }) => {
+      setConnections((prev) =>
+        prev.map((conn) =>
+          conn.id.toString() === id ? { ...conn, isOnline: status === "online" } : conn
+        )
+      );
+    });
+
+    socketRef.current.on("receiveMessage", (message) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: message._id,
+          senderId: message.senderId,
+          senderName: message.senderId === userId ? "You" : connections.find((c) => c.id === message.senderId)?.name || "Unknown",
+          message: message.content,
+          timestamp: new Date(message.timestamp).toLocaleTimeString(),
+          isOwn: message.senderId === userId,
+        },
+      ]);
+      setConnections((prev) =>
+        prev.map((conn) =>
+          conn.id.toString() === message.senderId && conn.id !== selectedConnection?.id
+            ? { ...conn, unreadCount: conn.unreadCount + 1, lastMessage: message.content, lastMessageTime: new Date(message.timestamp).toLocaleTimeString() }
+            : conn.id === selectedConnection?.id
+            ? { ...conn, lastMessage: message.content, lastMessageTime: new Date(message.timestamp).toLocaleTimeString() }
+            : conn
+        )
+      );
+    });
+
+    socketRef.current.on("typing", ({ senderId, receiverId, isTyping: typing }) => {
+      if (receiverId === userId && senderId === selectedConnection?.id) {
+        setIsTyping((prev) => ({ ...prev, [senderId]: typing }));
+      }
+    });
+
+    socketRef.current.on("messagesRead", ({ userId: receiverId, receiverId: senderId }) => {
+      if (senderId === selectedConnection?.id) {
+        setConnections((prev) =>
+          prev.map((conn) => (conn.id === senderId ? { ...conn, unreadCount: 0 } : conn))
+        );
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [userId]);
+
+  // Fetch messages when selected connection changes
+  useEffect(() => {
+    if (selectedConnection) {
+      const fetchMessages = async () => {
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/api/messages/${userId}/${selectedConnection.id}`
+          );
+          setMessages(response.data);
+          // Mark messages as read
+          socketRef.current.emit("markMessagesRead", { userId, receiverId: selectedConnection.id });
+          setConnections((prev) =>
+            prev.map((conn) =>
+              conn.id === selectedConnection.id ? { ...conn, unreadCount: 0 } : conn
+            )
+          );
+        } catch (error) {
+          console.error("Error fetching messages:", error);
+        }
+      };
+      fetchMessages();
+    }
+  }, [selectedConnection, userId]);
+
+  // Handle typing indicator
+  useEffect(() => {
+    if (selectedConnection) {
+      const typingTimeout = setTimeout(() => {
+        socketRef.current.emit("typing", {
+          senderId: userId,
+          receiverId: selectedConnection.id,
+          isTyping: newMessage.trim().length > 0,
+        });
+      }, 300);
+
+      return () => clearTimeout(typingTimeout);
+    }
+  }, [newMessage, selectedConnection, userId]);
+
+  // Scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() && selectedConnection) {
+      socketRef.current.emit("sendMessage", {
+        senderId: userId,
+        receiverId: selectedConnection.id,
+        content: newMessage,
+      });
+      setNewMessage("");
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   const filteredConnections = connections.filter(
     (connection) =>
       connection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      connection.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
-
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Here you would typically send the message to your backend
-      console.log("Sending message:", newMessage)
-      setNewMessage("")
-    }
-  }
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
+      connection.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex h-screen bg-white">
@@ -194,7 +188,7 @@ export default function LinkedInChatPage() {
             <div
               key={connection.id}
               className={`p-4 cursor-pointer hover:bg-gray-50 border-b border-gray-100 transition-colors ${
-                selectedConnection.id === connection.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                selectedConnection?.id === connection.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
               }`}
               onClick={() => setSelectedConnection(connection)}
             >
@@ -231,7 +225,7 @@ export default function LinkedInChatPage() {
 
                   <div className="flex items-center">
                     <p className="text-sm text-gray-600 truncate flex-1">
-                      {connection.isTyping ? (
+                      {isTyping[connection.id] ? (
                         <span className="text-blue-500 italic">typing...</span>
                       ) : (
                         connection.lastMessage
@@ -248,102 +242,107 @@ export default function LinkedInChatPage() {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={selectedConnection.avatar || "/placeholder.svg"} alt={selectedConnection.name} />
-                  <AvatarFallback>
-                    {selectedConnection.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                {selectedConnection.isOnline && (
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                )}
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-gray-900">{selectedConnection.name}</h2>
-                <p className="text-sm text-gray-500">{selectedConnection.title}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
-                <Phone className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Video className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Info className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-          <div className="space-y-4 max-w-4xl mx-auto">
-            {sampleMessages.map((message) => (
-              <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}>
-                  <div
-                    className={`rounded-lg p-3 ${
-                      message.isOwn ? "bg-blue-500 text-white" : "bg-white text-gray-800 border border-gray-200"
-                    }`}
-                  >
-                    <p className="text-sm">{message.message}</p>
+        {selectedConnection && (
+          <>
+            <div className="bg-white border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={selectedConnection.avatar || "/placeholder.svg"} alt={selectedConnection.name} />
+                      <AvatarFallback>
+                        {selectedConnection.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    {selectedConnection.isOnline && (
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                    )}
                   </div>
-                  <p className={`text-xs text-gray-500 mt-1 ${message.isOwn ? "text-right" : "text-left"}`}>
-                    {message.timestamp}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Message Input */}
-        <div className="bg-white border-t border-gray-200 p-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-end gap-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Button variant="ghost" size="sm">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <ImageIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Smile className="h-4 w-4" />
-                  </Button>
+                  <div>
+                    <h2 className="font-semibold text-gray-900">{selectedConnection.name}</h2>
+                    <p className="text-sm text-gray-500">{selectedConnection.title}</p>
+                  </div>
                 </div>
-                <div className="flex items-end gap-2">
-                  <Input
-                    placeholder="Write a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1 min-h-[40px] resize-none"
-                  />
-                  <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                    <Send className="h-4 w-4" />
+
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Video className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Info className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+
+            {/* Messages */}
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+              <div className="space-y-4 max-w-4xl mx-auto">
+                {messages.map((message) => (
+                  <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}>
+                      <div
+                        className={`rounded-lg p-3 ${
+                          message.isOwn ? "bg-blue-500 text-white" : "bg-white text-gray-800 border border-gray-200"
+                        }`}
+                      >
+                        <p className="text-sm">{message.message}</p>
+                      </div>
+                      <p className={`text-xs text-gray-500 mt-1 ${message.isOwn ? "text-right" : "text-left"}`}>
+                        {message.timestamp}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <div className="bg-white border-t border-gray-200 p-4">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Button variant="ghost" size="sm">
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <ImageIcon className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <Input
+                        placeholder="Write a message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="flex-1 min-h-[40px] resize-none"
+                      />
+                      <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
-  )
+  );
 }
