@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, MessageCircle, Video, Phone, MoreVertical, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,120 +9,124 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import io from "socket.io-client"
+import axios from "axios"
+import { toast } from "sonner" // Use sonner instead of toast
 
-const mentors = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    expertise: "Frontend Development",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "Sure, I can help you with React hooks!",
-    lastMessageTime: "2m ago",
-    rating: 4.9,
-    responseTime: "< 5 min",
-    price: 45,
-    bio: "Senior Frontend Developer with 8+ years experience in React, Vue, and Angular.",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    expertise: "Backend Development",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "Let me review your API design...",
-    lastMessageTime: "15m ago",
-    rating: 4.8,
-    responseTime: "< 10 min",
-    price: 60,
-    bio: "Full-stack engineer specializing in Node.js, Python, and cloud architecture.",
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    expertise: "UI/UX Design",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-    lastMessage: "Great progress on your wireframes!",
-    lastMessageTime: "1h ago",
-    rating: 4.9,
-    responseTime: "< 15 min",
-    price: 55,
-    bio: "Product designer with expertise in user research and design systems.",
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    expertise: "Data Science",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "The model looks good, try adjusting...",
-    lastMessageTime: "30m ago",
-    rating: 4.7,
-    responseTime: "< 20 min",
-    price: 70,
-    bio: "Data scientist with PhD in Machine Learning and 6+ years industry experience.",
-  },
-  {
-    id: 5,
-    name: "Lisa Thompson",
-    expertise: "Product Management",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-    lastMessage: "Your roadmap needs some refinement",
-    lastMessageTime: "2h ago",
-    rating: 4.8,
-    responseTime: "< 30 min",
-    price: 50,
-    bio: "Senior Product Manager at tech startups, expert in agile methodologies.",
-  },
-  {
-    id: 6,
-    name: "Alex Parker",
-    expertise: "DevOps",
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    lastMessage: "Docker setup is working perfectly now",
-    lastMessageTime: "45m ago",
-    rating: 4.6,
-    responseTime: "< 25 min",
-    price: 40,
-    bio: "DevOps engineer with expertise in AWS, Docker, Kubernetes, and CI/CD.",
-  },
-]
+// Initialize Socket.IO client
+const socket = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev", { withCredentials: true })
 
 export default function MentorChatPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [ratingFilter, setRatingFilter] = useState("all")
   const [priceFilter, setPriceFilter] = useState("all")
-  const [selectedMentor, setSelectedMentor] = useState([])
+  const [selectedMentor, setSelectedMentor] = useState(null)
   const [showChat, setShowChat] = useState(false)
+  const [mentors, setMentors] = useState([])
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const userId = "68513ba087655694a9350b1b" // Default userId
+  // const userId = "6877d6f580b7beac37c9fb99"
 
-  const filteredMentors = mentors.filter((mentor) => {
-    const matchesSearch =
-      mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mentor.expertise.toLowerCase().includes(searchQuery.toLowerCase())
+  // Fetch mentors from backend
+  useEffect(() => {
+    const fetchMentors = async () => {
+      setLoading(true)
+      try {
+        const params = {}
+        if (selectedFilter !== "all") {
+          params.isOnline = selectedFilter === "online"
+        }
+        if (searchQuery) {
+          params.skills = searchQuery
+        }
+        if (ratingFilter !== "all") {
+          params.rating = ratingFilter.replace("+", "")
+        }
+        if (priceFilter !== "all") {
+          if (priceFilter === "under-50") params.price = "0-50"
+          else if (priceFilter === "50-60") params.price = "50-60"
+          else if (priceFilter === "above-60") params.price = "60"
+        }
 
-    const matchesStatus =
-      selectedFilter === "all" ||
-      (selectedFilter === "online" && mentor.isOnline) ||
-      (selectedFilter === "offline" && !mentor.isOnline)
+        const response = await axios.get("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors", { params })
+        setMentors(response.data)
+        setError(null)
+      } catch (error) {
+        console.error("Error fetching mentors:", error)
+        setError("Failed to load mentors. Please try again.")
+        toast.error("Failed to load mentors.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMentors()
+  }, [searchQuery, selectedFilter, ratingFilter, priceFilter])
 
-    const matchesRating =
-      ratingFilter === "all" ||
-      (ratingFilter === "4.5+" && mentor.rating >= 4.5) ||
-      (ratingFilter === "4.0+" && mentor.rating >= 4.0) ||
-      (ratingFilter === "3.5+" && mentor.rating >= 3.5)
+  // Socket.IO setup for real-time updates
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server")
+    })
 
-    const matchesPrice =
-      priceFilter === "all" ||
-      (priceFilter === "under-50" && mentor.price < 50) ||
-      (priceFilter === "50-60" && mentor.price >= 50 && mentor.price <= 60) ||
-      (priceFilter === "above-60" && mentor.price > 60)
+    socket.on("mentorStatus", ({ mentorId, isOnline }) => {
+      console.log(`Mentor ${mentorId} is ${isOnline ? "online" : "offline"}`)
+      setMentors((prevMentors) =>
+        prevMentors.map((mentor) =>
+          mentor._id === mentorId ? { ...mentor, isOnline } : mentor
+        )
+      )
+    })
 
-    return matchesSearch && matchesStatus && matchesRating && matchesPrice
-  })
+    socket.on("receiveMessage", (message) => {
+      console.log("Received message:", message)
+      setMessages((prev) => [...prev, message])
+    })
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error)
+      setError("Failed to connect to chat server.")
+      toast.error("Failed to connect to chat server.")
+    })
+
+    return () => {
+      socket.off("connect")
+      socket.off("mentorStatus")
+      socket.off("receiveMessage")
+      socket.off("connect_error")
+    }
+  }, [])
+
+  // Fetch chat history when a mentor is selected
+  useEffect(() => {
+    if (selectedMentor) {
+      const fetchChatHistory = async () => {
+        setLoading(true)
+        try {
+          const response = await axios.get(
+            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${selectedMentor.shortName}/chat?userId=${userId}`
+          )
+          console.log("Chat history fetched:", response.data)
+          setMessages(response.data)
+          setError(null)
+        } catch (error) {
+          console.error("Error fetching chat history:", error)
+          setError("Failed to load chat history. Please try again.")
+          toast.error("Failed to load chat history.")
+        } finally {
+          setLoading(false)
+        }
+      }
+      fetchChatHistory()
+
+      socket.emit("joinChat", { userId, mentorId: selectedMentor._id }, (response) => {
+        console.log("Joined chat room:", response)
+      })
+    }
+  }, [selectedMentor])
 
   const handleChatClick = (mentor) => {
     setSelectedMentor(mentor)
@@ -132,6 +136,30 @@ export default function MentorChatPage() {
   const handleBackToList = () => {
     setShowChat(false)
     setSelectedMentor(null)
+    setMessages([])
+    setError(null)
+  }
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      const tempMessage = {
+        senderId: userId,
+        receiverId: selectedMentor._id,
+        content: newMessage,
+        createdAt: new Date(),
+        tempId: Date.now() // Temporary ID for optimistic update
+      }
+      // Optimistically add message to UI
+      setMessages((prev) => [...prev, tempMessage])
+      socket.emit("sendMessage", {
+        senderId: userId,
+        receiverId: selectedMentor._id,
+        content: newMessage,
+      }, (response) => {
+        console.log("Send message response:", response)
+      })
+      setNewMessage("")
+    }
   }
 
   if (showChat && selectedMentor) {
@@ -149,7 +177,7 @@ export default function MentorChatPage() {
 
                 <div className="relative">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={selectedMentor.avatar || "/placeholder.svg"} alt={selectedMentor.name} />
+                    <AvatarImage src={selectedMentor.profileImage || "/placeholder.svg"} alt={selectedMentor.name} />
                     <AvatarFallback>
                       {selectedMentor.name
                         .split(" ")
@@ -167,7 +195,7 @@ export default function MentorChatPage() {
                 <div>
                   <h2 className="font-semibold text-gray-900">{selectedMentor.name}</h2>
                   <p className="text-sm text-gray-500">
-                    {selectedMentor.isOnline ? "Online" : "Last seen 2h ago"} • {selectedMentor.expertise}
+                    {selectedMentor.isOnline ? "Online" : "Last seen 2h ago"} • {selectedMentor.skills.join(", ")}
                   </p>
                 </div>
               </div>
@@ -197,40 +225,39 @@ export default function MentorChatPage() {
 
           {/* Chat Messages */}
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+            {loading && <p className="text-center text-gray-500">Loading messages...</p>}
+            {error && <p className="text-center text-red-500">{error}</p>}
             <div className="space-y-4">
-              {/* Sample Messages */}
-              <div className="flex justify-start">
-                <div className="bg-white rounded-lg p-3 max-w-xs shadow-sm">
-                  <p className="text-sm text-gray-800">
-                    Hi! I saw your question about React hooks. I'd be happy to help you understand them better.
-                  </p>
-                  <span className="text-xs text-gray-500 mt-1 block">10:30 AM</span>
+              {messages.map((msg, index) => (
+                <div key={msg._id || msg.tempId || index} className={`flex ${msg.senderId.toString() === userId ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`rounded-lg p-3 max-w-xs shadow-sm ${
+                      msg.senderId.toString() === userId ? "bg-blue-500 text-white" : "bg-white text-gray-800"
+                    }`}
+                  >
+                    <p className="text-sm">{msg.content}</p>
+                    <span className={`text-xs mt-1 block ${
+                      msg.senderId.toString() === userId ? "text-blue-100" : "text-gray-500"
+                    }`}>
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <div className="bg-blue-500 text-white rounded-lg p-3 max-w-xs">
-                  <p className="text-sm">Thanks! I'm struggling with useEffect and its dependencies.</p>
-                  <span className="text-xs text-blue-100 mt-1 block">10:32 AM</span>
-                </div>
-              </div>
-
-              <div className="flex justify-start">
-                <div className="bg-white rounded-lg p-3 max-w-xs shadow-sm">
-                  <p className="text-sm text-gray-800">
-                    Perfect! Let's start with the basics. useEffect runs after every render by default...
-                  </p>
-                  <span className="text-xs text-gray-500 mt-1 block">10:33 AM</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* Message Input */}
           <div className="bg-white border-t border-gray-200 p-4">
             <div className="flex items-center gap-2">
-              <Input placeholder="Type your message..." className="flex-1" />
-              <Button>
+              <Input
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1"
+              />
+              <Button onClick={handleSendMessage}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Send
               </Button>
@@ -253,7 +280,6 @@ export default function MentorChatPage() {
         {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -264,7 +290,6 @@ export default function MentorChatPage() {
               />
             </div>
 
-            {/* Status Filter */}
             <Select value={selectedFilter} onValueChange={setSelectedFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -276,7 +301,6 @@ export default function MentorChatPage() {
               </SelectContent>
             </Select>
 
-            {/* Rating Filter */}
             <Select value={ratingFilter} onValueChange={setRatingFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Rating" />
@@ -289,7 +313,6 @@ export default function MentorChatPage() {
               </SelectContent>
             </Select>
 
-            {/* Price Filter */}
             <Select value={priceFilter} onValueChange={setPriceFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Price Range" />
@@ -306,20 +329,24 @@ export default function MentorChatPage() {
 
         {/* Results Count */}
         <div className="mb-4">
-          <p className="text-gray-600">
-            Showing {filteredMentors.length} mentor{filteredMentors.length !== 1 ? "s" : ""}
-          </p>
+          {loading && <p className="text-gray-500">Loading mentors...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {!loading && !error && (
+            <p className="text-gray-600">
+              Showing {mentors.length} mentor{mentors.length !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
 
         {/* Mentor Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMentors.map((mentor) => (
-            <Card key={mentor.id} className="hover:shadow-lg transition-shadow">
+          {mentors.map((mentor) => (
+            <Card key={mentor._id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="relative">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={mentor.avatar || "/placeholder.svg"} alt={mentor.name} />
+                      <AvatarImage src={mentor.profileImage || "/placeholder.svg"} alt={mentor.name} />
                       <AvatarFallback className="text-lg">
                         {mentor.name
                           .split(" ")
@@ -337,9 +364,9 @@ export default function MentorChatPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg text-gray-900 mb-1">{mentor.name}</h3>
                     <Badge variant="secondary" className="mb-2">
-                      {mentor.expertise}
+                      {mentor.skills.join(", ")}
                     </Badge>
-                    <p className="text-sm text-gray-600 mb-3">{mentor.bio}</p>
+                    <p className="text-sm text-gray-600 mb-3">{mentor.description}</p>
                   </div>
                 </div>
 
@@ -351,10 +378,6 @@ export default function MentorChatPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Price:</span>
                     <span className="font-medium text-green-600">${mentor.price}/hr</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Response:</span>
-                    <span className="font-medium">{mentor.responseTime}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Status:</span>
@@ -382,7 +405,7 @@ export default function MentorChatPage() {
         </div>
 
         {/* No Results */}
-        {filteredMentors.length === 0 && (
+        {!loading && mentors.length === 0 && !error && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No mentors found matching your criteria</p>
             <p className="text-gray-400 mt-2">Try adjusting your filters or search terms</p>

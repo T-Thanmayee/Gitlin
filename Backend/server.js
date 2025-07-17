@@ -2,12 +2,37 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 4000;
+const server = http.createServer(app);
 
-// CORS configuration
+// Socket.IO setup with CORS
+const io = new Server(server, {
+  cors: {
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        'https://solid-sniffle-4jqqqqx79prv3j74w-5173.app.github.dev',
+        'https://literate-space-guide-9766rwg7rj5wh97qx-5173.app.github.dev',
+        'http://localhost:5173',
+        'http://localhost:3000',
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin || '*');
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  }
+});
+
+// CORS configuration for Express
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
@@ -50,13 +75,16 @@ const usersInfo = require('./API/usersInfoApi');
 const projectInfo = require('./API/projectInfoApi');
 const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
-const mentorsRouter = require('./API/Mentor'); // Add mentor router
+const mentorsRouter = require('./API/Mentor');
 
 app.use('/user', usersInfo);
 app.use('/projects', projectInfo);
 app.use('/post', postInfo);
 app.use('/tutorials', tutorials);
-app.use('/mentors', mentorsRouter); // Add mentor routes
+app.use('/mentors', mentorsRouter);
+
+// Initialize Socket.IO for mentor routes
+mentorsRouter.setupSocket(io);
 
 // Test route
 app.get('/hello', (req, res) => {
@@ -72,4 +100,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || 'Internal Server Error' });
 });
 
-app.listen(port, () => console.log(`Web server running on port ${port}`));
+server.listen(port, () => console.log(`Web server running on port ${port}`));
