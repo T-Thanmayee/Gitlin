@@ -247,34 +247,40 @@ module.exports.setupSocket = (io) => {
     });
 
     socket.on('sendMessage', async ({ senderId, receiverId, content, tempId }, callback) => {
-      try {
-        if (!mongoose.isValidObjectId(senderId) || !mongoose.isValidObjectId(receiverId)) {
-          throw new Error('Invalid senderId or receiverId');
-        }
-        const [sender, receiver] = await Promise.all([
-          User.findById(senderId) || Mentor.findById(senderId),
-          Mentor.findById(receiverId) || User.findById(receiverId),
-        ]);
-        if (!sender || !receiver) {
-          throw new Error('Sender or receiver not found');
-        }
+  try {
+    if (!mongoose.isValidObjectId(senderId) || !mongoose.isValidObjectId(receiverId)) {
+      throw new Error('Invalid senderId or receiverId');
+    }
 
-        const message = new Message({
-          senderId,
-          receiverId,
-          content,
-          createdAt: new Date()
-        });
-        await message.save();
+    const sender = await User.findById(senderId) || await Mentor.findById(senderId);
+    const receiver = await User.findById(receiverId) || await Mentor.findById(receiverId);
 
-        const room = [senderId, receiverId].sort().join('_');
-        io.to(room).emit('receiveMessage', { ...message.toObject(), tempId });
-        callback({ status: 'success', message });
-      } catch (error) {
-        console.error('Error sending message:', error);
-        callback({ status: 'error', error: error.message });
-      }
+    if (!sender || !receiver) {
+      throw new Error('Sender or receiver not found');
+    }
+
+    const message = new Message({
+      senderId,
+      receiverId,
+      content,
+      createdAt: new Date()
     });
+    await message.save();
+
+    const room = [senderId, receiverId].sort().join('_');
+    io.to(room).emit('receiveMessage', { ...message.toObject(), tempId });
+
+    if (typeof callback === 'function') {
+      callback({ status: 'success', message });
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+    if (typeof callback === 'function') {
+      callback({ status: 'error', error: error.message });
+    }
+  }
+});
+
 
     socket.on('disconnect', async () => {
       try {

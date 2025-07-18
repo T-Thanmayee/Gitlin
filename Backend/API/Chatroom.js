@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../Schema/Users'); // Adjust path to match your User.js
-const Message = mongoose.model('Message'); // Assuming Message model is already defined
+const Message = require('../Schema/Message'); // Assuming Message model is already defined
 
 const router = express.Router();
 
@@ -150,6 +150,8 @@ module.exports = function initializeChat(io) {
   // Route to get chat history between two users
   const User = require('../Schema/Users');
 
+
+
 router.get('/messages/:userId/:receiverId', async (req, res) => {
   try {
     const { userId, receiverId } = req.params;
@@ -162,11 +164,12 @@ router.get('/messages/:userId/:receiverId', async (req, res) => {
       ],
     }).sort('createdAt');
 
-    // Get unique senderIds from the messages
     const senderIds = [...new Set(messages.map(m => m.senderId))];
+    console.log('Unique senderIds:', senderIds);
 
-    // Fetch sender info from User collection
-    const users = await User.find({ _id: { $in: senderIds.map(id => mongoose.Types.ObjectId(id)) } });
+    const users = await User.find({
+      _id: { $in: senderIds.map(id => new mongoose.Types.ObjectId(id)) }
+    });
 
     const userMap = {};
     users.forEach(user => {
@@ -193,6 +196,7 @@ router.get('/messages/:userId/:receiverId', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 
   return router;

@@ -20,7 +20,7 @@ export default function DisplayUserWithSearch() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState([]); // Store current user's following list
-  const currentUserId = "68513ba087655694a9350b1b"; // Replace with auth system
+  const currentUserId = "68513b0287655694a9350b08"; // Replace with auth system
 
   useEffect(() => {
     async function fetchCurrentUserFollowing() {
