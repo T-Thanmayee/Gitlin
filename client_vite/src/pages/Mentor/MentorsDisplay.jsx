@@ -1,180 +1,228 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Search, MessageCircle, Video, Phone, MoreVertical, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import io from "socket.io-client"
-import axios from "axios"
-import { toast } from "sonner" // Use sonner instead of toast
-
-// Initialize Socket.IO client
-const socket = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev", { withCredentials: true })
+import { useState, useEffect, useRef } from "react";
+import { Search, MessageCircle, Video, Phone, MoreVertical, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import io from "socket.io-client";
+import axios from "axios";
+import { toast } from "sonner";
 
 export default function MentorChatPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState("all")
-  const [ratingFilter, setRatingFilter] = useState("all")
-  const [priceFilter, setPriceFilter] = useState("all")
-  const [selectedMentor, setSelectedMentor] = useState(null)
-  const [showChat, setShowChat] = useState(false)
-  const [mentors, setMentors] = useState([])
-  const [messages, setMessages] = useState([])
-  const [newMessage, setNewMessage] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const userId = "68513ba087655694a9350b1b" // Default userId
-  // const userId = "6877d6f580b7beac37c9fb99"
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [ratingFilter, setRatingFilter] = useState("all");
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [mentors, setMentors] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const userId = "68513ba087655694a9350b1b"; // Default userId
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-  // Fetch mentors from backend
+  // Initialize Socket.IO with /mentor-chat namespace
   useEffect(() => {
-    const fetchMentors = async () => {
-      setLoading(true)
-      try {
-        const params = {}
-        if (selectedFilter !== "all") {
-          params.isOnline = selectedFilter === "online"
-        }
-        if (searchQuery) {
-          params.skills = searchQuery
-        }
-        if (ratingFilter !== "all") {
-          params.rating = ratingFilter.replace("+", "")
-        }
-        if (priceFilter !== "all") {
-          if (priceFilter === "under-50") params.price = "0-50"
-          else if (priceFilter === "50-60") params.price = "50-60"
-          else if (priceFilter === "above-60") params.price = "60"
-        }
+    socketRef.current = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentor-chat", {
+      withCredentials: true,
+    });
+    console.log("Socket.IO connecting to /mentor-chat...");
 
-        const response = await axios.get("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors", { params })
-        setMentors(response.data)
-        setError(null)
-      } catch (error) {
-        console.error("Error fetching mentors:", error)
-        setError("Failed to load mentors. Please try again.")
-        toast.error("Failed to load mentors.")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchMentors()
-  }, [searchQuery, selectedFilter, ratingFilter, priceFilter])
+    socketRef.current.on("connect", () => {
+      console.log("Connected to Socket.IO server on /mentor-chat, socket ID:", socketRef.current.id);
+    });
 
-  // Socket.IO setup for real-time updates
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Connected to Socket.IO server")
-    })
-
-    socket.on("mentorStatus", ({ mentorId, isOnline }) => {
-      console.log(`Mentor ${mentorId} is ${isOnline ? "online" : "offline"}`)
+    socketRef.current.on("mentorStatus", ({ mentorId, isOnline }) => {
+      console.log(`Mentor ${mentorId} is ${isOnline ? "online" : "offline"}`);
       setMentors((prevMentors) =>
         prevMentors.map((mentor) =>
           mentor._id === mentorId ? { ...mentor, isOnline } : mentor
         )
-      )
-    })
+      );
+    });
 
-    socket.on("receiveMessage", (message) => {
-      console.log("Received message:", message)
-      setMessages((prev) => [...prev, message])
-    })
+    socketRef.current.on("receiveMessage", (message) => {
+      console.log("Received message on /mentor-chat:", message);
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === message._id.toString() || msg.tempId === message.tempId)) {
+          console.log("Duplicate message ignored:", message._id || message.tempId);
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: message._id.toString(),
+            senderId: message.senderId,
+            receiverId: message.receiverId,
+            content: message.content,
+            createdAt: new Date(message.timestamp),
+            isOwn: message.senderId === userId,
+            senderName: message.senderId === userId ? "You" : selectedMentor?.name || "Mentor",
+          },
+        ];
+      });
+    });
 
-    socket.on("connect_error", (error) => {
-      console.error("Socket.IO connection error:", error)
-      setError("Failed to connect to chat server.")
-      toast.error("Failed to connect to chat server.")
-    })
+    socketRef.current.on("connect_error", (error) => {
+      console.error("Socket.IO connection error on /mentor-chat:", error);
+      setError("Failed to connect to chat server.");
+      toast.error("Failed to connect to chat server.");
+    });
 
     return () => {
-      socket.off("connect")
-      socket.off("mentorStatus")
-      socket.off("receiveMessage")
-      socket.off("connect_error")
-    }
-  }, [])
+      socketRef.current.off("connect");
+      socketRef.current.off("mentorStatus");
+      socketRef.current.off("receiveMessage");
+      socketRef.current.off("connect_error");
+      socketRef.current.disconnect();
+      console.log("Socket.IO disconnected from /mentor-chat and listeners removed");
+    };
+  }, []);
 
-  // Fetch chat history when a mentor is selected
+  // Fetch mentors from backend
+  useEffect(() => {
+    const fetchMentors = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (selectedFilter !== "all") {
+          params.isOnline = selectedFilter === "online";
+        }
+        if (searchQuery) {
+          params.skills = searchQuery;
+        }
+        if (ratingFilter !== "all") {
+          params.rating = ratingFilter.replace("+", "");
+        }
+        if (priceFilter !== "all") {
+          if (priceFilter === "under-50") params.price = "0-50";
+          else if (priceFilter === "50-60") params.price = "50-60";
+          else if (priceFilter === "above-60") params.price = "60";
+        }
+
+        const response = await axios.get("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors", { params });
+        setMentors(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching mentors:", error);
+        setError("Failed to load mentors. Please try again.");
+        toast.error("Failed to load mentors.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMentors();
+  }, [searchQuery, selectedFilter, ratingFilter, priceFilter]);
+
+  // Fetch chat history and join chat room when a mentor is selected
   useEffect(() => {
     if (selectedMentor) {
       const fetchChatHistory = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
           const response = await axios.get(
             `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${selectedMentor.shortName}/chat?userId=${userId}`
-          )
-          console.log("Chat history fetched:", response.data)
-          setMessages(response.data)
-          setError(null)
+          );
+          console.log("Chat history fetched:", response.data);
+          setMessages(response.data);
+          setError(null);
         } catch (error) {
-          console.error("Error fetching chat history:", error)
-          setError("Failed to load chat history. Please try again.")
-          toast.error("Failed to load chat history.")
+          console.error("Error fetching chat history:", error);
+          setError("Failed to load chat history. Please try again.");
+          toast.error("Failed to load chat history.");
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
-      }
-      fetchChatHistory()
+      };
+      fetchChatHistory();
 
-      socket.emit("joinChat", { userId, mentorId: selectedMentor._id }, (response) => {
-        console.log("Joined chat room:", response)
-      })
+      socketRef.current.emit("joinChat", { userId, mentorId: selectedMentor._id }, (response) => {
+        console.log("Joined chat room:", response);
+      });
     }
-  }, [selectedMentor])
+  }, [selectedMentor, userId]);
+
+  // Scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleChatClick = (mentor) => {
-    setSelectedMentor(mentor)
-    setShowChat(true)
-  }
+    setSelectedMentor(mentor);
+    setShowChat(true);
+  };
 
   const handleBackToList = () => {
-    setShowChat(false)
-    setSelectedMentor(null)
-    setMessages([])
-    setError(null)
-  }
+    setShowChat(false);
+    setSelectedMentor(null);
+    setMessages([]);
+    setError(null);
+  };
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() && selectedMentor) {
+      const tempId = Date.now().toString();
+      const debugId = Math.random().toString(36).substring(7);
+      console.log("Sending message with debugId:", debugId);
       const tempMessage = {
+        id: tempId,
         senderId: userId,
         receiverId: selectedMentor._id,
         content: newMessage,
         createdAt: new Date(),
-        tempId: Date.now() // Temporary ID for optimistic update
-      }
+        tempId,
+        isOwn: true,
+        senderName: "You",
+      };
       // Optimistically add message to UI
-      setMessages((prev) => [...prev, tempMessage])
-      socket.emit("sendMessage", {
-        senderId: userId,
-        receiverId: selectedMentor._id,
-        content: newMessage,
-      }, (response) => {
-        console.log("Send message response:", response)
-      })
-      setNewMessage("")
+      setMessages((prev) => [...prev, tempMessage]);
+      socketRef.current.emit(
+        "sendMessage",
+        {
+          senderId: userId,
+          receiverId: selectedMentor._id,
+          content: newMessage,
+          tempId,
+          debugId,
+        },
+        (response) => {
+          console.log("Send message response:", response);
+          if (response.status === "error") {
+            toast.error(response.error);
+            // Remove optimistic message on error
+            setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
+          }
+        }
+      );
+      setNewMessage("");
     }
-  }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.repeat) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   if (showChat && selectedMentor) {
     return (
       <div className="flex h-screen bg-gray-50">
-        {/* Chat Interface */}
         <div className="flex-1 flex flex-col">
-          {/* Chat Header */}
           <div className="bg-white border-b border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="sm" onClick={handleBackToList}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={selectedMentor.profileImage || "/placeholder.svg"} alt={selectedMentor.name} />
@@ -191,7 +239,6 @@ export default function MentorChatPage() {
                     }`}
                   />
                 </div>
-
                 <div>
                   <h2 className="font-semibold text-gray-900">{selectedMentor.name}</h2>
                   <p className="text-sm text-gray-500">
@@ -199,7 +246,6 @@ export default function MentorChatPage() {
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm">
                   <Phone className="h-4 w-4" />
@@ -222,42 +268,42 @@ export default function MentorChatPage() {
               </div>
             </div>
           </div>
-
-          {/* Chat Messages */}
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
             {loading && <p className="text-center text-gray-500">Loading messages...</p>}
             {error && <p className="text-center text-red-500">{error}</p>}
             <div className="space-y-4">
-              {messages.map((msg, index) => (
-                <div key={msg._id || msg.tempId || index} className={`flex ${msg.senderId.toString() === userId ? "justify-end" : "justify-start"}`}>
+              {messages.map((msg) => (
+                <div
+                  key={msg.id || msg.tempId}
+                  className={`flex ${msg.isOwn ? "justify-end" : "justify-start"}`}
+                >
                   <div
                     className={`rounded-lg p-3 max-w-xs shadow-sm ${
-                      msg.senderId.toString() === userId ? "bg-blue-500 text-white" : "bg-white text-gray-800"
+                      msg.isOwn ? "bg-blue-500 text-white" : "bg-white text-gray-800"
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
-                    <span className={`text-xs mt-1 block ${
-                      msg.senderId.toString() === userId ? "text-blue-100" : "text-gray-500"
-                    }`}>
+                    <span
+                      className={`text-xs mt-1 block ${msg.isOwn ? "text-blue-100" : "text-gray-500"}`}
+                    >
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
           </div>
-
-          {/* Message Input */}
           <div className="bg-white border-t border-gray-200 p-4">
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Type your message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyPress={handleKeyPress}
                 className="flex-1"
               />
-              <Button onClick={handleSendMessage}>
+              <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Send
               </Button>
@@ -265,19 +311,16 @@ export default function MentorChatPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Your Mentor</h1>
           <p className="text-gray-600">Connect with experienced professionals to accelerate your learning</p>
         </div>
-
-        {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -289,7 +332,6 @@ export default function MentorChatPage() {
                 className="pl-10"
               />
             </div>
-
             <Select value={selectedFilter} onValueChange={setSelectedFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -300,7 +342,6 @@ export default function MentorChatPage() {
                 <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={ratingFilter} onValueChange={setRatingFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Rating" />
@@ -312,7 +353,6 @@ export default function MentorChatPage() {
                 <SelectItem value="3.5+">3.5+ Stars</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={priceFilter} onValueChange={setPriceFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Price Range" />
@@ -326,8 +366,6 @@ export default function MentorChatPage() {
             </Select>
           </div>
         </div>
-
-        {/* Results Count */}
         <div className="mb-4">
           {loading && <p className="text-gray-500">Loading mentors...</p>}
           {error && <p className="text-red-500">{error}</p>}
@@ -337,8 +375,6 @@ export default function MentorChatPage() {
             </p>
           )}
         </div>
-
-        {/* Mentor Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentors.map((mentor) => (
             <Card key={mentor._id} className="hover:shadow-lg transition-shadow">
@@ -347,7 +383,7 @@ export default function MentorChatPage() {
                   <div className="relative">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={mentor.profileImage || "/placeholder.svg"} alt={mentor.name} />
-                      <AvatarFallback className="text-lg">
+                      <AvatarFallback>
                         {mentor.name
                           .split(" ")
                           .map((n) => n[0])
@@ -360,7 +396,6 @@ export default function MentorChatPage() {
                       }`}
                     />
                   </div>
-
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg text-gray-900 mb-1">{mentor.name}</h3>
                     <Badge variant="secondary" className="mb-2">
@@ -369,7 +404,6 @@ export default function MentorChatPage() {
                     <p className="text-sm text-gray-600 mb-3">{mentor.description}</p>
                   </div>
                 </div>
-
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Rating:</span>
@@ -386,7 +420,6 @@ export default function MentorChatPage() {
                     </span>
                   </div>
                 </div>
-
                 <div className="flex gap-2">
                   <Button onClick={() => handleChatClick(mentor)} className="flex-1">
                     <MessageCircle className="h-4 w-4 mr-2" />
@@ -403,8 +436,6 @@ export default function MentorChatPage() {
             </Card>
           ))}
         </div>
-
-        {/* No Results */}
         {!loading && mentors.length === 0 && !error && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No mentors found matching your criteria</p>
@@ -413,5 +444,5 @@ export default function MentorChatPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

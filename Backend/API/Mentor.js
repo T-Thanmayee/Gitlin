@@ -6,16 +6,13 @@ const Mentor = require('../Schema/Mentor');
 const Message = require('../Schema/Message');
 const User = require('../Schema/Users');
 
-// Configure multer for file upload
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Middleware for async error handling
 const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// GET all mentors with filters
 router.get('/', asyncHandler(async (req, res) => {
   const { isOnline, skills, rating, price } = req.query;
   const query = {};
@@ -42,7 +39,6 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(mentors);
 }));
 
-// GET single mentor by shortName
 router.get('/:shortName', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findOne({ shortName: req.params.shortName });
   if (!mentor) {
@@ -51,7 +47,6 @@ router.get('/:shortName', asyncHandler(async (req, res) => {
   res.json(mentor);
 }));
 
-// GET mentor by ID
 router.get('/:mentorId', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findById(req.params.mentorId);
   if (!mentor) {
@@ -60,7 +55,6 @@ router.get('/:mentorId', asyncHandler(async (req, res) => {
   res.json(mentor);
 }));
 
-// POST create new mentor
 router.post(
   '/',
   upload.single('profilePicture'),
@@ -74,7 +68,7 @@ router.post(
       description: req.body.bio || req.body.description,
       experience: req.body.experience,
       price: req.body.hourlyRate,
-      isOnline: false
+      isOnline: false,
     });
 
     const newMentor = await mentor.save();
@@ -82,7 +76,6 @@ router.post(
   })
 );
 
-// PUT update mentor
 router.put('/:shortName', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findOne({ shortName: req.params.shortName });
   if (!mentor) {
@@ -102,7 +95,6 @@ router.put('/:shortName', asyncHandler(async (req, res) => {
   res.json(updatedMentor);
 }));
 
-// DELETE mentor
 router.delete('/:shortName', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findOne({ shortName: req.params.shortName });
   if (!mentor) {
@@ -113,7 +105,6 @@ router.delete('/:shortName', asyncHandler(async (req, res) => {
   res.json({ message: 'Mentor deleted successfully' });
 }));
 
-// GET chat history between user and mentor
 router.get('/:shortName/chat', asyncHandler(async (req, res) => {
   const { userId } = req.query;
   if (!userId) {
@@ -136,14 +127,22 @@ router.get('/:shortName/chat', asyncHandler(async (req, res) => {
   const messages = await Message.find({
     $or: [
       { senderId: userId, receiverId: mentor._id },
-      { senderId: mentor._id, receiverId: userId }
-    ]
+      { senderId: mentor._id, receiverId: userId },
+    ],
   }).sort({ createdAt: 1 });
 
-  res.json(messages);
+  const formattedMessages = messages.map((msg) => ({
+    id: msg._id.toString(),
+    senderId: msg.senderId.toString(),
+    senderName: msg.senderId.toString() === userId ? 'You' : mentor.name,
+    message: msg.content,
+    timestamp: new Date(msg.createdAt).toLocaleTimeString(),
+    isOwn: msg.senderId.toString() === userId,
+  }));
+
+  res.json(formattedMessages);
 }));
 
-// GET users who messaged the mentor with their latest message
 router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
   const { mentorId } = req.params;
 
@@ -151,73 +150,55 @@ router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
- 
 
   const userMessages = await Message.aggregate([
-  {
-    $match: {
-      $or: [
-        { receiverId: mentorId },
-        { senderId: mentorId }
-      ]
-    }
-  },
-  { $sort: { createdAt: -1 } },
-  {
-    $addFields: {
-      otherUserId: {
-        $cond: [
-          { $eq: ['$senderId', mentorId] },
-          '$receiverId',
-          '$senderId'
-        ]
-      }
-    }
-  },
-  {
-    $group: {
-      _id: '$otherUserId',
-      latestMessage: { $first: '$content' },
-      latestMessageTime: { $first: '$createdAt' }
-    }
-  },
-  {
-    $lookup: {
-      from: 'users',
-      let: { uid: { $toObjectId: '$_id' } },
-      pipeline: [
-        {
-          $match: {
-            $expr: { $eq: ['$_id', '$$uid'] }
-          }
-        }
-      ],
-      as: 'user'
-    }
-  },
-  { $unwind: '$user' },
-  {
-    $project: {
-      userId: '$_id',
-      username: '$user.username',
-      email: '$user.personal.email',
-      latestMessage: 1,
-      latestMessageTime: 1
-    }
-  }
-]);
-
+    {
+      $match: {
+        $or: [{ receiverId: mentorId }, { senderId: mentorId }],
+      },
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $addFields: {
+        otherUserId: {
+          $cond: [{ $eq: ['$senderId', mentorId] }, '$receiverId', '$senderId'],
+        },
+      },
+    },
+    {
+      $group: {
+        _id: '$otherUserId',
+        latestMessage: { $first: '$content' },
+        latestMessageTime: { $first: '$createdAt' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        let: { uid: { $toObjectId: '$_id' } },
+        pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$uid'] } } }],
+        as: 'user',
+      },
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        userId: '$_id',
+        username: '$user.username',
+        email: '$user.personal.email',
+        latestMessage: 1,
+        latestMessageTime: 1,
+      },
+    },
+  ]);
 
   res.json(userMessages);
 }));
 
-
-module.exports = router;
-
-// Socket.IO setup
 module.exports.setupSocket = (io) => {
-  io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+  const mentorNamespace = io.of('/mentor-chat');
+  mentorNamespace.on('connection', (socket) => {
+    console.log('A user connected to /mentor-chat:', socket.id);
 
     socket.on('joinMentor', async (mentorId) => {
       try {
@@ -230,7 +211,7 @@ module.exports.setupSocket = (io) => {
           socket.join(mentorId);
           mentor.isOnline = true;
           await mentor.save();
-          io.emit('mentorStatus', { mentorId, isOnline: true });
+          mentorNamespace.emit('mentorStatus', { mentorId, isOnline: true });
         }
       } catch (error) {
         console.error('Error joining mentor:', error);
@@ -246,41 +227,65 @@ module.exports.setupSocket = (io) => {
       socket.join(room);
     });
 
-    socket.on('sendMessage', async ({ senderId, receiverId, content, tempId }, callback) => {
-  try {
-    if (!mongoose.isValidObjectId(senderId) || !mongoose.isValidObjectId(receiverId)) {
-      throw new Error('Invalid senderId or receiverId');
-    }
+    socket.on('sendMessage', async ({ senderId, receiverId, content, tempId, debugId }, callback) => {
+      console.log(`Received sendMessage (debugId: ${debugId}) on /mentor-chat:`, { senderId, receiverId, content });
+      try {
+        if (!mongoose.isValidObjectId(senderId) || !mongoose.isValidObjectId(receiverId)) {
+          throw new Error('Invalid senderId or receiverId');
+        }
 
-    const sender = await User.findById(senderId) || await Mentor.findById(senderId);
-    const receiver = await User.findById(receiverId) || await Mentor.findById(receiverId);
+        const sender = await User.findById(senderId) || await Mentor.findById(senderId);
+        const receiver = await User.findById(receiverId) || await Mentor.findById(receiverId);
 
-    if (!sender || !receiver) {
-      throw new Error('Sender or receiver not found');
-    }
+        if (!sender || !receiver) {
+          throw new Error('Sender or receiver not found');
+        }
 
-    const message = new Message({
-      senderId,
-      receiverId,
-      content,
-      createdAt: new Date()
+        // Check for duplicate message
+        const existingMessage = await Message.findOne({
+          senderId,
+          receiverId,
+          content,
+          timestamp: { $gte: new Date(Date.now() - 1000) },
+        });
+        if (existingMessage) {
+          console.log(`Duplicate message detected (debugId: ${debugId}) on /mentor-chat`);
+          if (typeof callback === 'function') {
+            callback({ status: 'error', error: 'Duplicate message' });
+          }
+          return;
+        }
+
+        const message = new Message({
+          senderId,
+          receiverId,
+          content,
+          createdAt: new Date(),
+        });
+        await message.save();
+
+        const messageData = {
+          _id: message._id,
+          senderId: message.senderId.toString(),
+          receiverId: message.receiverId.toString(),
+          content: message.content,
+          timestamp: message.createdAt,
+          tempId,
+        };
+
+        const room = [senderId, receiverId].sort().join('_');
+        mentorNamespace.to(room).emit('receiveMessage', messageData);
+
+        if (typeof callback === 'function') {
+          callback({ status: 'success', message: messageData });
+        }
+      } catch (error) {
+        console.error(`Error sending message (debugId: ${debugId}) on /mentor-chat:`, error);
+        if (typeof callback === 'function') {
+          callback({ status: 'error', error: error.message });
+        }
+      }
     });
-    await message.save();
-
-    const room = [senderId, receiverId].sort().join('_');
-    io.to(room).emit('receiveMessage', { ...message.toObject(), tempId });
-
-    if (typeof callback === 'function') {
-      callback({ status: 'success', message });
-    }
-  } catch (error) {
-    console.error('Error sending message:', error);
-    if (typeof callback === 'function') {
-      callback({ status: 'error', error: error.message });
-    }
-  }
-});
-
 
     socket.on('disconnect', async () => {
       try {
@@ -288,12 +293,14 @@ module.exports.setupSocket = (io) => {
         if (mentor) {
           mentor.isOnline = false;
           await mentor.save();
-          io.emit('mentorStatus', { mentorId: mentor._id, isOnline: false });
+          mentorNamespace.emit('mentorStatus', { mentorId: mentor._id, isOnline: false });
         }
-        console.log('User disconnected:', socket.id);
+        console.log('User disconnected from /mentor-chat:', socket.id);
       } catch (error) {
-        console.error('Error on disconnect:', error);
+        console.error('Error on disconnect from /mentor-chat:', error);
       }
     });
   });
 };
+
+module.exports.router = router;

@@ -75,23 +75,18 @@ const usersInfo = require('./API/usersInfoApi');
 const projectInfo = require('./API/projectInfoApi');
 const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
-const mentorsRouter = require('./API/Mentor');
-const chatroom = require('./API/Chatroom');
+const mentorsRouter = require('./API/Mentor'); // MentorChat module
+const chatroom = require('./API/Chatroom'); // LinkedInChat module
 
 app.use('/user', usersInfo);
 app.use('/projects', projectInfo);
 app.use('/post', postInfo);
 app.use('/tutorials', tutorials);
-app.use('/mentors', mentorsRouter);
+app.use('/mentors', mentorsRouter.router); // Use mentorsRouter.router
 app.use('/chat', chatroom(io)); // Pass io to chatroom
 
 // Initialize Socket.IO for mentor routes
 mentorsRouter.setupSocket(io);
-
-// Test route
-app.get('/hello', (req, res) => {
-  res.send('Welcome to the backend server');
-});
 
 // Serve static files from Uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));

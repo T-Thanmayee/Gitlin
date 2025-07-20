@@ -22,7 +22,6 @@ export default function LinkedInChatPage({ userId }) {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Initialize Socket.IO and fetch initial data
   useEffect(() => {
     if (!userId) {
       setError("User ID is missing");
@@ -30,16 +29,14 @@ export default function LinkedInChatPage({ userId }) {
       return;
     }
 
-    // Connect to Socket.IO server
-    socketRef.current = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev", {
+    // Connect to /chat namespace
+    socketRef.current = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat", {
       withCredentials: true,
     });
-    console.log("Socket.IO connecting...");
+    console.log("Socket.IO connecting to /chat...");
 
-    // Emit user login
     socketRef.current.emit("userLogin", userId);
 
-    // Fetch connections (followers)
     const fetchConnections = async () => {
       try {
         setLoading(true);
@@ -66,9 +63,8 @@ export default function LinkedInChatPage({ userId }) {
 
     fetchConnections();
 
-    // Socket.IO event listeners
     socketRef.current.on("connect", () => {
-      console.log("Socket.IO connected");
+      console.log("Socket.IO connected to /chat, socket ID:", socketRef.current.id);
     });
 
     socketRef.current.on("userStatus", ({ userId: id, status }) => {
@@ -81,21 +77,27 @@ export default function LinkedInChatPage({ userId }) {
     });
 
     socketRef.current.on("receiveMessage", (message) => {
-      console.log("Received message:", message);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: message._id,
-          senderId: message.senderId,
-          senderName:
-            message.senderId === userId
-              ? "You"
-              : connections.find((c) => c.id.toString() === message.senderId.toString())?.name || "Unknown",
-          message: message.content,
-          timestamp: new Date(message.timestamp).toLocaleTimeString(),
-          isOwn: message.senderId === userId,
-        },
-      ]);
+      console.log("Received message on /chat:", message);
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === message._id.toString())) {
+          console.log("Duplicate message ignored:", message._id);
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: message._id.toString(),
+            senderId: message.senderId,
+            senderName:
+              message.senderId === userId
+                ? "You"
+                : connections.find((c) => c.id.toString() === message.senderId.toString())?.name || "Unknown",
+            message: message.content,
+            timestamp: new Date(message.timestamp).toLocaleTimeString(),
+            isOwn: message.senderId === userId,
+          },
+        ];
+      });
       setConnections((prev) =>
         prev.map((conn) =>
           conn.id.toString() === message.senderId && conn.id !== selectedConnection?.id
@@ -106,6 +108,38 @@ export default function LinkedInChatPage({ userId }) {
                 lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
               }
             : conn.id === selectedConnection?.id
+            ? {
+                ...conn,
+                lastMessage: message.content,
+                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
+              }
+            : conn
+        )
+      );
+    });
+
+    socketRef.current.on("messageSent", (message) => {
+      console.log("Message sent confirmation on /chat:", message);
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === message._id.toString())) {
+          console.log("Duplicate sent message ignored:", message._id);
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: message._id.toString(),
+            senderId: message.senderId,
+            senderName: "You",
+            message: message.content,
+            timestamp: new Date(message.timestamp).toLocaleTimeString(),
+            isOwn: true,
+          },
+        ];
+      });
+      setConnections((prev) =>
+        prev.map((conn) =>
+          conn.id.toString() === message.receiverId
             ? {
                 ...conn,
                 lastMessage: message.content,
@@ -133,18 +167,23 @@ export default function LinkedInChatPage({ userId }) {
     });
 
     socketRef.current.on("connect_error", (error) => {
-      console.error("Socket.IO connection error:", error);
+      console.error("Socket.IO connection error on /chat:", error);
       setError("Failed to connect to chat server");
     });
 
-    // Cleanup on unmount
     return () => {
+      socketRef.current.off("connect");
+      socketRef.current.off("receiveMessage");
+      socketRef.current.off("messageSent");
+      socketRef.current.off("userStatus");
+      socketRef.current.off("typing");
+      socketRef.current.off("messagesRead");
+      socketRef.current.off("connect_error");
       socketRef.current.disconnect();
-      console.log("Socket.IO disconnected");
+      console.log("Socket.IO disconnected from /chat and listeners removed");
     };
   }, [userId]);
 
-  // Fetch messages when selected connection changes
   useEffect(() => {
     if (selectedConnection) {
       const fetchMessages = async () => {
@@ -174,7 +213,6 @@ export default function LinkedInChatPage({ userId }) {
     }
   }, [selectedConnection, userId]);
 
-  // Handle typing indicator
   useEffect(() => {
     if (selectedConnection) {
       const typingTimeout = setTimeout(() => {
@@ -189,25 +227,26 @@ export default function LinkedInChatPage({ userId }) {
     }
   }, [newMessage, selectedConnection, userId]);
 
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() && selectedConnection) {
-      console.log("Sending message:", { senderId: userId, receiverId: selectedConnection.id, content: newMessage });
+      const debugId = Math.random().toString(36).substring(7);
+      console.log("Sending message with debugId:", debugId);
       socketRef.current.emit("sendMessage", {
         senderId: userId,
         receiverId: selectedConnection.id,
         content: newMessage,
+        debugId,
       });
       setNewMessage("");
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !e.repeat) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -221,13 +260,9 @@ export default function LinkedInChatPage({ userId }) {
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Sidebar - Connections List */}
       <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-        {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-semibold text-gray-900 mb-4">Messaging</h1>
-
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -238,8 +273,6 @@ export default function LinkedInChatPage({ userId }) {
             />
           </div>
         </div>
-
-        {/* Connections List */}
         <div className="flex-1 overflow-y-auto">
           {loading && <p className="p-4 text-gray-500">Loading connections...</p>}
           {error && <p className="p-4 text-red-500">{error}</p>}
@@ -269,7 +302,6 @@ export default function LinkedInChatPage({ userId }) {
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
                   )}
                 </div>
-
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-medium text-gray-900 truncate">{connection.name}</h3>
@@ -282,9 +314,7 @@ export default function LinkedInChatPage({ userId }) {
                       )}
                     </div>
                   </div>
-
                   <p className="text-sm text-gray-500 truncate mb-1">{connection.title}</p>
-
                   <div className="flex items-center">
                     <p className="text-sm text-gray-600 truncate flex-1">
                       {isTyping[connection.id] ? (
@@ -300,8 +330,6 @@ export default function LinkedInChatPage({ userId }) {
           ))}
         </div>
       </div>
-
-      {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         {selectedConnection ? (
           <>
@@ -322,13 +350,11 @@ export default function LinkedInChatPage({ userId }) {
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                     )}
                   </div>
-
                   <div>
                     <h2 className="font-semibold text-gray-900">{selectedConnection.name}</h2>
                     <p className="text-sm text-gray-500">{selectedConnection.title}</p>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm">
                     <Phone className="h-4 w-4" />
@@ -345,7 +371,6 @@ export default function LinkedInChatPage({ userId }) {
                 </div>
               </div>
             </div>
-
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
               <div className="space-y-4 max-w-4xl mx-auto">
                 {loading && <p className="text-gray-500">Loading messages...</p>}
@@ -372,7 +397,6 @@ export default function LinkedInChatPage({ userId }) {
                 <div ref={messagesEndRef} />
               </div>
             </div>
-
             <div className="bg-white border-t border-gray-200 p-4">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-end gap-3">
