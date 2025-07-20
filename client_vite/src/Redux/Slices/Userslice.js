@@ -1,7 +1,7 @@
 import { createSlice, isPending} from "@reduxjs/toolkit";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from 'axios'
-const url=VITE_REACT_APP_API_URL || 'http://localhost:5000/api/v1/user/login';
+const url= 'http://localhost:5000/api/v1/user/login';
 export const userThunk=createAsyncThunk('userThunk',async(userCredObj,thunkApi)=>{
     try{
         if(userCredObj!=null)

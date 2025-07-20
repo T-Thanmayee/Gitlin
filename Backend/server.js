@@ -5,7 +5,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
-
+const authMiddleware = require('./Middleware/authMiddleware'); // Import auth middleware
 const app = express();
 const port = process.env.PORT || 4000;
 const server = http.createServer(app);
@@ -78,9 +78,9 @@ const tutorials = require('./API/tutorials');
 const mentorsRouter = require('./API/Mentor'); // MentorChat module
 const chatroom = require('./API/Chatroom'); // LinkedInChat module
 
-app.use('/user', usersInfo);
-app.use('/projects', projectInfo);
-app.use('/post', postInfo);
+app.use('/user', authMiddleware,usersInfo);
+app.use('/projects', authMiddleware,projectInfo);
+app.use('/post',authMiddleware, postInfo);
 app.use('/tutorials', tutorials);
 app.use('/mentors', mentorsRouter.router); // Use mentorsRouter.router
 app.use('/chat', chatroom(io)); // Pass io to chatroom

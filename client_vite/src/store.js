@@ -1,9 +1,8 @@
-import {configureStore} from '@reduxjs/toolkit'
-import { UserThunk } from './Redux/Slices/Userslice';
-// to takes a proprty as reducers we need to add slices here so that the state can be acessed by globally
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './Redux/Slices/Userslice'; // Adjust path if using authSlice
 
-export const store=configureStore({
-    reducer:{
-        userslice:UserThunk,
-    }
-})
+export const store = configureStore({
+  reducer: {
+    auth: authReducer, // Use 'auth' as the state slice key
+  },
+});
