@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,7 +12,7 @@ import io from "socket.io-client";
 import { toast } from "sonner";
 
 // Initialize Socket.IO client
-const socket = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/", {
+const socket = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentor-chat", {
   withCredentials: true,
 });
 
@@ -30,7 +31,7 @@ export default function MentorMessages() {
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}/messages/users`
+          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}/messages/users`
         );
         console.log("Fetched users:", response.data);
         setUsers(response.data);
@@ -43,14 +44,13 @@ export default function MentorMessages() {
         setLoading(false);
       }
     };
+
     fetchUsers();
 
-    // Join mentor's room
     socket.emit("joinMentor", mentorId, (response) => {
-      console.log("Joined mentor room:", response);
+      console.log("Joined mentor room:", response || "No response");
     });
 
-    // Listen for new messages
     socket.on("receiveMessage", (message) => {
       console.log("Received message:", message);
       if (
@@ -60,12 +60,25 @@ export default function MentorMessages() {
         (message.senderId.toString() === mentorId || message.receiverId.toString() === mentorId)
       ) {
         setMessages((prev) => {
-          // Replace optimistic message if it exists
+          // Remove optimistic message with matching tempId
           const filteredMessages = prev.filter((msg) => !msg.tempId || msg.tempId !== message.tempId);
-          return [...filteredMessages, message];
+          return [
+            ...filteredMessages,
+            {
+              id: message._id,
+              senderId: message.senderId,
+              senderName: message.senderId === mentorId ? "You" : selectedUser.username,
+              message: message.content, // Use message.content for consistency
+              timestamp: new Date(message.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              isOwn: message.senderId === mentorId,
+            },
+          ];
         });
       }
-      // Update user list with new message
+      // Update user list with latest message
       setUsers((prev) =>
         prev.map((user) =>
           user.userId.toString() === message.senderId.toString() ||
@@ -100,13 +113,14 @@ export default function MentorMessages() {
         setLoading(true);
         try {
           const response = await axios.get(
-            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${selectedUser.mentorShortName}/chat?userId=${selectedUser.userId}`
+            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${selectedUser.mentorShortName}/chat`,
+            { params: { userId: selectedUser.userId } }
           );
           console.log("Fetched chat history:", response.data);
           setMessages(response.data);
           setError(null);
         } catch (error) {
-          console.error("Error fetching chat history:", error);
+          console.error("Error fetching chat history:", error.response?.data || error.message);
           setError("Failed to load chat history. Please try again.");
           toast.error("Failed to load chat history.");
         } finally {
@@ -116,17 +130,20 @@ export default function MentorMessages() {
       fetchChatHistory();
 
       socket.emit("joinChat", { userId: selectedUser.userId, mentorId }, (response) => {
-        console.log("Joined chat room:", response);
+        console.log("Joined chat room:", response || "No response");
       });
     }
   }, [selectedUser]);
 
   const handleUserClick = async (user) => {
     try {
-      const mentor = await axios.get(`https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}`);
-      setSelectedUser({ ...user, mentorShortName: mentor.data.shortName });
+      const mentorResponse = await axios.get(
+        `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}`
+      );
+      setSelectedUser({ ...user, mentorShortName: mentorResponse.data.shortName });
+      setMessages([]); // Clear messages before loading new chat
     } catch (error) {
-      console.error("Error fetching mentor shortName:", error);
+      console.error("Error fetching mentor shortName:", error.response?.data || error.message);
       toast.error("Failed to load mentor details.");
     }
   };
@@ -138,29 +155,35 @@ export default function MentorMessages() {
   };
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() && selectedUser) {
+      const tempId = Date.now().toString();
       const tempMessage = {
+        id: tempId,
+        tempId,
         senderId: mentorId,
-        receiverId: selectedUser.userId,
-        content: newMessage,
-        createdAt: new Date(),
-        tempId: Date.now(),
+        senderName: "You",
+        message: newMessage, // Use message for consistency
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        isOwn: true,
       };
       console.log("Optimistic message added:", tempMessage);
       setMessages((prev) => [...prev, tempMessage]);
+
       socket.emit(
         "sendMessage",
         {
           senderId: mentorId,
           receiverId: selectedUser.userId,
           content: newMessage,
-          tempId: tempMessage.tempId, // Include tempId for server to echo back
+          tempId,
+          debugId: tempId, // For debugging
+          context: "mentor",
         },
         (response) => {
           console.log("Send message response:", response);
           if (response.status === "error") {
             console.error("Send message failed:", response.error);
-            setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessage.tempId));
+            setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
             setError(response.error);
             toast.error(response.error);
           }
@@ -201,7 +224,7 @@ export default function MentorMessages() {
             <div className="space-y-4">
               {messages.map((msg) => (
                 <div
-                  key={msg._id || msg.tempId}
+                  key={msg.id || msg.tempId}
                   className={`flex ${
                     msg.senderId.toString() === mentorId ? "justify-end" : "justify-start"
                   } animate-fade-in`}
@@ -213,13 +236,13 @@ export default function MentorMessages() {
                         : "bg-gray-100 text-gray-900 shadow-md"
                     }`}
                   >
-                    <p className="text-sm break-words">{msg.content}</p>
+                    <p className="text-sm break-words">{msg.message}</p>
                     <span
                       className={`text-xs mt-1 block ${
                         msg.senderId.toString() === mentorId ? "text-blue-200" : "text-gray-500"
                       }`}
                     >
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {msg.timestamp}
                     </span>
                   </div>
                 </div>
