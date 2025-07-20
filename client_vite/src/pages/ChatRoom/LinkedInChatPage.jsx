@@ -1,439 +1,315 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Search, Send, MoreHorizontal, Phone, Video, Info, Paperclip, Smile, ImageIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import io from "socket.io-client";
+import { Card, CardContent } from "@/components/ui/card";
 import axios from "axios";
+import io from "socket.io-client";
+import { toast } from "sonner";
 
-export default function LinkedInChatPage({ userId }) {
-  console.log("LinkedInChatPage rendered with userId:", userId);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [connections, setConnections] = useState([]);
-  const [selectedConnection, setSelectedConnection] = useState(null);
+// Initialize Socket.IO client
+const socket = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/", {
+  withCredentials: true,
+});
+
+export default function MentorMessages() {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isTyping, setIsTyping] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const socketRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const mentorId = "6877d6f580b7beac37c9fb99"; // Mentor ObjectId
 
+  // Fetch users who messaged the mentor
   useEffect(() => {
-    if (!userId) {
-      setError("User ID is missing");
-      setLoading(false);
-      return;
-    }
-
-    // Connect to /chat namespace
-    socketRef.current = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat", {
-      withCredentials: true,
-    });
-    console.log("Socket.IO connecting to /chat...");
-
-    socketRef.current.emit("userLogin", userId);
-
-    const fetchConnections = async () => {
+    const fetchUsers = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const response = await axios.get(
-          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/users/${userId}/followers`,
-          { withCredentials: true }
+          `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}/messages/users`
         );
-        console.log("Fetched connections:", response.data);
-        setConnections(response.data);
-        if (response.data.length > 0) {
-          setSelectedConnection(response.data[0]);
-        } else {
-          console.log("No connections found");
-          setError("No connections found");
-        }
+        console.log("Fetched users:", response.data);
+        setUsers(response.data);
         setError(null);
       } catch (error) {
-        console.error("Error fetching connections:", error.response?.data || error.message);
-        setError(error.response?.data?.message || "Failed to load connections");
+        console.error("Error fetching users:", error);
+        setError("Failed to load users. Please try again.");
+        toast.error("Failed to load users.");
       } finally {
         setLoading(false);
       }
     };
+    fetchUsers();
 
-    fetchConnections();
-
-    socketRef.current.on("connect", () => {
-      console.log("Socket.IO connected to /chat, socket ID:", socketRef.current.id);
+    // Join mentor's room
+    socket.emit("joinMentor", mentorId, (response) => {
+      console.log("Joined mentor room:", response);
     });
 
-    socketRef.current.on("userStatus", ({ userId: id, status }) => {
-      console.log(`User ${id} is ${status}`);
-      setConnections((prev) =>
-        prev.map((conn) =>
-          conn.id.toString() === id ? { ...conn, isOnline: status === "online" } : conn
-        )
-      );
-    });
-
-    socketRef.current.on("receiveMessage", (message) => {
-      console.log("Received message on /chat:", message);
-      setMessages((prev) => {
-        if (prev.some((msg) => msg.id === message._id.toString())) {
-          console.log("Duplicate message ignored:", message._id);
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            id: message._id.toString(),
-            senderId: message.senderId,
-            senderName:
-              message.senderId === userId
-                ? "You"
-                : connections.find((c) => c.id.toString() === message.senderId.toString())?.name || "Unknown",
-            message: message.content,
-            timestamp: new Date(message.timestamp).toLocaleTimeString(),
-            isOwn: message.senderId === userId,
-          },
-        ];
-      });
-      setConnections((prev) =>
-        prev.map((conn) =>
-          conn.id.toString() === message.senderId && conn.id !== selectedConnection?.id
-            ? {
-                ...conn,
-                unreadCount: conn.unreadCount + 1,
-                lastMessage: message.content,
-                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
-              }
-            : conn.id === selectedConnection?.id
-            ? {
-                ...conn,
-                lastMessage: message.content,
-                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
-              }
-            : conn
-        )
-      );
-    });
-
-    socketRef.current.on("messageSent", (message) => {
-      console.log("Message sent confirmation on /chat:", message);
-      setMessages((prev) => {
-        if (prev.some((msg) => msg.id === message._id.toString())) {
-          console.log("Duplicate sent message ignored:", message._id);
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            id: message._id.toString(),
-            senderId: message.senderId,
-            senderName: "You",
-            message: message.content,
-            timestamp: new Date(message.timestamp).toLocaleTimeString(),
-            isOwn: true,
-          },
-        ];
-      });
-      setConnections((prev) =>
-        prev.map((conn) =>
-          conn.id.toString() === message.receiverId
-            ? {
-                ...conn,
-                lastMessage: message.content,
-                lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
-              }
-            : conn
-        )
-      );
-    });
-
-    socketRef.current.on("typing", ({ senderId, receiverId, isTyping: typing }) => {
-      if (receiverId === userId && senderId === selectedConnection?.id) {
-        console.log(`${senderId} is ${typing ? "typing" : "not typing"}`);
-        setIsTyping((prev) => ({ ...prev, [senderId]: typing }));
+    // Listen for new messages
+    socket.on("receiveMessage", (message) => {
+      console.log("Received message:", message);
+      if (
+        selectedUser &&
+        (message.senderId.toString() === selectedUser.userId.toString() ||
+          message.receiverId.toString() === selectedUser.userId.toString()) &&
+        (message.senderId.toString() === mentorId || message.receiverId.toString() === mentorId)
+      ) {
+        setMessages((prev) => {
+          // Replace optimistic message if it exists
+          const filteredMessages = prev.filter((msg) => !msg.tempId || msg.tempId !== message.tempId);
+          return [...filteredMessages, message];
+        });
       }
+      // Update user list with new message
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.userId.toString() === message.senderId.toString() ||
+          user.userId.toString() === message.receiverId.toString()
+            ? { ...user, latestMessage: message.content, latestMessageTime: message.createdAt }
+            : user
+        )
+      );
     });
 
-    socketRef.current.on("messagesRead", ({ userId: receiverId, receiverId: senderId }) => {
-      if (senderId === selectedConnection?.id) {
-        console.log(`Messages from ${senderId} marked as read`);
-        setConnections((prev) =>
-          prev.map((conn) => (conn.id === senderId ? { ...conn, unreadCount: 0 } : conn))
-        );
-      }
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server");
     });
 
-    socketRef.current.on("connect_error", (error) => {
-      console.error("Socket.IO connection error on /chat:", error);
-      setError("Failed to connect to chat server");
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+      setError("Failed to connect to chat server.");
+      toast.error("Failed to connect to chat server.");
     });
 
     return () => {
-      socketRef.current.off("connect");
-      socketRef.current.off("receiveMessage");
-      socketRef.current.off("messageSent");
-      socketRef.current.off("userStatus");
-      socketRef.current.off("typing");
-      socketRef.current.off("messagesRead");
-      socketRef.current.off("connect_error");
-      socketRef.current.disconnect();
-      console.log("Socket.IO disconnected from /chat and listeners removed");
+      socket.off("receiveMessage");
+      socket.off("connect");
+      socket.off("connect_error");
     };
-  }, [userId]);
+  }, [selectedUser, mentorId]);
 
+  // Fetch chat history when a user is selected
   useEffect(() => {
-    if (selectedConnection) {
-      const fetchMessages = async () => {
+    if (selectedUser) {
+      const fetchChatHistory = async () => {
+        setLoading(true);
         try {
-          setLoading(true);
+          const mentor = await axios.get(
+            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}`
+          );
           const response = await axios.get(
-            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/messages/${userId}/${selectedConnection.id}`,
-            { withCredentials: true }
+            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}/chat`,
+            {
+              params: { userId: selectedUser.userId },
+            }
           );
-          console.log("Fetched messages:", response.data);
+          console.log("Fetched chat history:", response.data);
           setMessages(response.data);
-          socketRef.current.emit("markMessagesRead", { userId, receiverId: selectedConnection.id });
-          setConnections((prev) =>
-            prev.map((conn) =>
-              conn.id === selectedConnection.id ? { ...conn, unreadCount: 0 } : conn
-            )
-          );
           setError(null);
         } catch (error) {
-          console.error("Error fetching messages:", error.response?.data || error.message);
-          setError(error.response?.data?.message || "Failed to load messages");
+          console.error("Error fetching chat history:", error);
+          setError("Failed to load chat history. Please try again.");
+          toast.error("Failed to load chat history.");
         } finally {
           setLoading(false);
         }
       };
-      fetchMessages();
+      fetchChatHistory();
+
+      const room = [selectedUser.userId, mentorId].sort().join("_");
+      socket.emit("joinChat", { userId: selectedUser.userId, mentorId }, (response) => {
+        console.log("Joined chat room:", response);
+      });
     }
-  }, [selectedConnection, userId]);
+  }, [selectedUser, mentorId]);
 
-  useEffect(() => {
-    if (selectedConnection) {
-      const typingTimeout = setTimeout(() => {
-        socketRef.current.emit("typing", {
-          senderId: userId,
-          receiverId: selectedConnection.id,
-          isTyping: newMessage.trim().length > 0,
-        });
-      }, 300);
-
-      return () => clearTimeout(typingTimeout);
+  const handleUserClick = async (user) => {
+    try {
+      const mentor = await axios.get(`https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${mentorId}`);
+      setSelectedUser({ ...user, mentorShortName: mentor.data.shortName });
+    } catch (error) {
+      console.error("Error fetching mentor shortName:", error);
+      toast.error("Failed to load mentor details.");
     }
-  }, [newMessage, selectedConnection, userId]);
+  };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const handleBackToList = () => {
+    setSelectedUser(null);
+    setMessages([]);
+    setError(null);
+  };
 
   const handleSendMessage = () => {
-    if (newMessage.trim() && selectedConnection) {
-      const debugId = Math.random().toString(36).substring(7);
-      console.log("Sending message with debugId:", debugId);
-      socketRef.current.emit("sendMessage", {
-        senderId: userId,
-        receiverId: selectedConnection.id,
+    if (newMessage.trim()) {
+      const tempMessage = {
+        senderId: mentorId,
+        receiverId: selectedUser.userId,
         content: newMessage,
-        debugId,
-      });
+        createdAt: new Date(),
+        tempId: Date.now(),
+      };
+      console.log("Optimistic message added:", tempMessage);
+      setMessages((prev) => [...prev, tempMessage]);
+      socket.emit(
+        "sendMessage",
+        {
+          senderId: mentorId,
+          receiverId: selectedUser.userId,
+          content: newMessage,
+          tempId: tempMessage.tempId, // Include tempId for server to echo back
+        },
+        (response) => {
+          console.log("Send message response:", response);
+          if (response.status === "error") {
+            console.error("Send message failed:", response.error);
+            setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessage.tempId));
+            setError(response.error);
+            toast.error(response.error);
+          }
+        }
+      );
       setNewMessage("");
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.repeat) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  if (selectedUser) {
+    return (
+      <div
+        className="flex h-screen bg-gradient-to-br from-blue-50 to-gray-100"
+        style={{ backgroundImage: "linear-gradient(to bottom right, #e0f7fa, #f0f4f8)" }}
+      >
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+          {/* Chat Header */}
+          <div className="bg-white shadow-md border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={handleBackToList} className="hover:bg-gray-100">
+                <ArrowLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+              <Avatar className="h-12 w-12 border-2 border-blue-200">
+                <AvatarImage src="/placeholder.svg" alt={selectedUser.username} className="object-cover" />
+                <AvatarFallback className="bg-blue-100 text-blue-800">{selectedUser.username[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="font-bold text-xl text-gray-900">{selectedUser.username}</h2>
+                <p className="text-sm text-gray-600">{selectedUser.email}</p>
+              </div>
+            </div>
+          </div>
 
-  const filteredConnections = connections.filter(
-    (connection) =>
-      connection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      connection.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+          {/* Chat Messages */}
+          <div className="flex-1 p-6 overflow-y-auto bg-white/80 backdrop-blur-md rounded-lg shadow-inner">
+            {loading && <p className="text-center text-gray-500 animate-pulse">Loading messages...</p>}
+            {error && <p className="text-center text-red-500">{error}</p>}
+            <div className="space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg._id || msg.tempId}
+                  className={`flex ${
+                    msg.senderId.toString() === mentorId ? "justify-end" : "justify-start"
+                  } animate-fade-in`}
+                >
+                  <div
+                    className={`rounded-lg p-3 max-w-[70%] ${
+                      msg.senderId.toString() === mentorId
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-900 shadow-md"
+                    }`}
+                  >
+                    <p className="text-sm break-words">{msg.content}</p>
+                    <span
+                      className={`text-xs mt-1 block ${
+                        msg.senderId.toString() === mentorId ? "text-blue-200" : "text-gray-500"
+                      }`}
+                    >
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-  return (
-    <div className="flex h-screen bg-white">
-      <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-900 mb-4">Messaging</h1>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search messages"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-50 border-gray-200"
-            />
+          {/* Message Input */}
+          <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Type your reply..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+              />
+              <Button
+                onClick={handleSendMessage}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Send
+              </Button>
+            </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {loading && <p className="p-4 text-gray-500">Loading connections...</p>}
-          {error && <p className="p-4 text-red-500">{error}</p>}
-          {!loading && !error && filteredConnections.length === 0 && (
-            <p className="p-4 text-gray-500">No connections found</p>
-          )}
-          {filteredConnections.map((connection) => (
-            <div
-              key={connection.id}
-              className={`p-4 cursor-pointer hover:bg-gray-50 border-b border-gray-100 transition-colors ${
-                selectedConnection?.id === connection.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
-              }`}
-              onClick={() => setSelectedConnection(connection)}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100"
+      style={{ backgroundImage: "linear-gradient(to bottom right, #e0f7fa, #f0f4f8)" }}
+    >
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Your Messages
+          </h1>
+          <p className="text-gray-600 text-lg">View and manage your conversations</p>
+        </div>
+
+        {loading && <p className="text-center text-gray-500 animate-pulse">Loading users...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
+        {!loading && !error && users.length === 0 && (
+          <p className="text-gray-500 text-center py-12">No messages yet.</p>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {users.map((user) => (
+            <Card
+              key={user.userId}
+              className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/90 backdrop-blur-md border border-gray-100"
             >
-              <div className="flex items-start gap-3">
-                <div className="relative">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={connection.avatar || "/placeholder.svg"} alt={connection.name} />
-                    <AvatarFallback>
-                      {connection.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-14 w-14 border-2 border-indigo-200">
+                    <AvatarImage src="/placeholder.svg" alt={user.username} className="object-cover" />
+                    <AvatarFallback className="bg-indigo-100 text-indigo-800">{user.username[0]}</AvatarFallback>
                   </Avatar>
-                  {connection.isOnline && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-gray-900 truncate">{connection.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">{connection.lastMessageTime}</span>
-                      {connection.unreadCount > 0 && (
-                        <Badge className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-                          {connection.unreadCount}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-500 truncate mb-1">{connection.title}</p>
-                  <div className="flex items-center">
-                    <p className="text-sm text-gray-600 truncate flex-1">
-                      {isTyping[connection.id] ? (
-                        <span className="text-blue-500 italic">typing...</span>
-                      ) : (
-                        connection.lastMessage || "No messages yet"
-                      )}
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{user.username}</h3>
+                    <p className="text-sm text-gray-600 truncate">{user.latestMessage}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(user.latestMessageTime).toLocaleString([], {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
+                <Button
+                  onClick={() => handleUserClick(user)}
+                  className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-2 transition-all duration-200"
+                >
+                  Active Chat
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
-      </div>
-      <div className="flex-1 flex flex-col">
-        {selectedConnection ? (
-          <>
-            <div className="bg-white border-b border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={selectedConnection.avatar || "/placeholder.svg"} alt={selectedConnection.name} />
-                      <AvatarFallback>
-                        {selectedConnection.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    {selectedConnection.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-900">{selectedConnection.name}</h2>
-                    <p className="text-sm text-gray-500">{selectedConnection.title}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Video className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Info className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-              <div className="space-y-4 max-w-4xl mx-auto">
-                {loading && <p className="text-gray-500">Loading messages...</p>}
-                {error && <p className="text-red-500">{error}</p>}
-                {!loading && !error && messages.length === 0 && (
-                  <p className="text-gray-500">No messages yet</p>
-                )}
-                {messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}>
-                      <div
-                        className={`rounded-lg p-3 ${
-                          message.isOwn ? "bg-blue-500 text-white" : "bg-white text-gray-800 border border-gray-200"
-                        }`}
-                      >
-                        <p className="text-sm">{message.message}</p>
-                      </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${message.isOwn ? "text-right" : "text-left"}`}>
-                        {message.timestamp}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-            <div className="bg-white border-t border-gray-200 p-4">
-              <div className="max-w-4xl mx-auto">
-                <div className="flex items-end gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Button variant="ghost" size="sm">
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <ImageIcon className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Smile className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <Input
-                        placeholder="Write a message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="flex-1 min-h-[40px] resize-none"
-                      />
-                      <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <p className="text-gray-500">Select a connection to start chatting</p>
-          </div>
-        )}
       </div>
     </div>
   );

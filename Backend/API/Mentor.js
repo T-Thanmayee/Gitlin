@@ -1,306 +1,307 @@
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const mongoose = require('mongoose');
-const Mentor = require('../Schema/Mentor');
-const Message = require('../Schema/Message');
-const User = require('../Schema/Users');
+"use client";
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+import { useState, useEffect } from "react";
+import { MessageCircle, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import axios from "axios";
+import io from "socket.io-client";
+import { toast } from "sonner";
 
-const asyncHandler = fn => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+// Initialize Socket.IO client
+const socket = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/", {
+  withCredentials: true,
+});
 
-router.get('/', asyncHandler(async (req, res) => {
-  const { isOnline, skills, rating, price } = req.query;
-  const query = {};
+export default function MentorMessages() {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const mentorId = "6877d6f580b7beac37c9fb99"; // Mentor ObjectId
 
-  if (isOnline !== undefined) {
-    query.isOnline = isOnline === 'true';
-  }
-  if (skills) {
-    query.skills = { $in: Array.isArray(skills) ? skills : [skills] };
-  }
-  if (rating) {
-    query.rating = { $gte: parseFloat(rating) };
-  }
-  if (price) {
-    if (price.includes('-')) {
-      const [min, max] = price.split('-').map(Number);
-      query.price = { $gte: min, $lte: max };
-    } else {
-      query.price = { $gte: parseInt(price) };
+  // Fetch users who messaged the mentor
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}/messages/users`
+        );
+        console.log("Fetched users:", response.data);
+        setUsers(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setError("Failed to load users. Please try again.");
+        toast.error("Failed to load users.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+
+    // Join mentor's room
+    socket.emit("joinMentor", mentorId, (response) => {
+      console.log("Joined mentor room:", response);
+    });
+
+    // Listen for new messages
+    socket.on("receiveMessage", (message) => {
+      console.log("Received message:", message);
+      if (
+        selectedUser &&
+        (message.senderId.toString() === selectedUser.userId.toString() ||
+          message.receiverId.toString() === selectedUser.userId.toString()) &&
+        (message.senderId.toString() === mentorId || message.receiverId.toString() === mentorId)
+      ) {
+        setMessages((prev) => {
+          // Replace optimistic message if it exists
+          const filteredMessages = prev.filter((msg) => !msg.tempId || msg.tempId !== message.tempId);
+          return [...filteredMessages, message];
+        });
+      }
+      // Update user list with new message
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.userId.toString() === message.senderId.toString() ||
+          user.userId.toString() === message.receiverId.toString()
+            ? { ...user, latestMessage: message.content, latestMessageTime: message.createdAt }
+            : user
+        )
+      );
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+      setError("Failed to connect to chat server.");
+      toast.error("Failed to connect to chat server.");
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+      socket.off("connect");
+      socket.off("connect_error");
+    };
+  }, [selectedUser, mentorId]);
+
+  // Fetch chat history when a user is selected
+  useEffect(() => {
+    if (selectedUser) {
+      const fetchChatHistory = async () => {
+        setLoading(true);
+        try {
+          const response = await axios.get(
+            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}/chat`,
+            {
+              params: { userId: selectedUser.userId },
+            }
+          );
+          console.log("Fetched chat history:", response.data);
+          setMessages(response.data);
+          setError(null);
+        } catch (error) {
+          console.error("Error fetching chat history:", error);
+          setError("Failed to load chat history. Please try again.");
+          toast.error("Failed to load chat history.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchChatHistory();
+
+      const room = [selectedUser.userId, mentorId].sort().join("_");
+      socket.emit("joinChat", { userId: selectedUser.userId, mentorId }, (response) => {
+        console.log("Joined chat room:", response);
+      });
     }
-  }
+  }, [selectedUser, mentorId]);
 
-  const mentors = await Mentor.find(query).sort({ createdAt: -1 });
-  res.json(mentors);
-}));
+  const handleUserClick = (user) => {
+    setSelectedUser(user); // Directly set the selected user without additional API call
+  };
 
-router.get('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-  res.json(mentor);
-}));
+  const handleBackToList = () => {
+    setSelectedUser(null);
+    setMessages([]);
+    setError(null);
+  };
 
-router.get('/:mentorId', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findById(req.params.mentorId);
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-  res.json(mentor);
-}));
-
-router.post(
-  '/',
-  upload.single('profilePicture'),
-  asyncHandler(async (req, res) => {
-    const mentor = new Mentor({
-      name: req.body.name,
-      shortName: req.body.shortName,
-      profileImage: req.file ? req.file.buffer.toString('base64') : null,
-      rating: req.body.rating,
-      skills: Array.isArray(req.body['skills']) ? req.body['skills'] : [req.body['skills']],
-      description: req.body.bio || req.body.description,
-      experience: req.body.experience,
-      price: req.body.hourlyRate,
-      isOnline: false,
-    });
-
-    const newMentor = await mentor.save();
-    res.status(201).json(newMentor);
-  })
-);
-
-router.put('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-
-  mentor.name = req.body.name || mentor.name;
-  mentor.profileImage = req.body.profileImage || mentor.profileImage;
-  mentor.rating = req.body.rating || mentor.rating;
-  mentor.skills = req.body.skills || mentor.skills;
-  mentor.description = req.body.description || mentor.description;
-  mentor.experience = req.body.experience || mentor.experience;
-  mentor.price = req.body.price || mentor.price;
-  mentor.isOnline = req.body.isOnline !== undefined ? req.body.isOnline : mentor.isOnline;
-
-  const updatedMentor = await mentor.save();
-  res.json(updatedMentor);
-}));
-
-router.delete('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-
-  await mentor.deleteOne();
-  res.json({ message: 'Mentor deleted successfully' });
-}));
-
-router.get('/:shortName/chat', asyncHandler(async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
-  }
-  if (!mongoose.isValidObjectId(userId)) {
-    return res.status(400).json({ message: 'Invalid User ID format' });
-  }
-
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-
-  const messages = await Message.find({
-    $or: [
-      { senderId: userId, receiverId: mentor._id },
-      { senderId: mentor._id, receiverId: userId },
-    ],
-  }).sort({ createdAt: 1 });
-
-  const formattedMessages = messages.map((msg) => ({
-    id: msg._id.toString(),
-    senderId: msg.senderId.toString(),
-    senderName: msg.senderId.toString() === userId ? 'You' : mentor.name,
-    message: msg.content,
-    timestamp: new Date(msg.createdAt).toLocaleTimeString(),
-    isOwn: msg.senderId.toString() === userId,
-  }));
-
-  res.json(formattedMessages);
-}));
-
-router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
-  const { mentorId } = req.params;
-
-  const mentor = await Mentor.findById(mentorId);
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-
-  const userMessages = await Message.aggregate([
-    {
-      $match: {
-        $or: [{ receiverId: mentorId }, { senderId: mentorId }],
-      },
-    },
-    { $sort: { createdAt: -1 } },
-    {
-      $addFields: {
-        otherUserId: {
-          $cond: [{ $eq: ['$senderId', mentorId] }, '$receiverId', '$senderId'],
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      const tempMessage = {
+        senderId: mentorId,
+        receiverId: selectedUser.userId,
+        content: newMessage,
+        createdAt: new Date(),
+        tempId: Date.now(),
+      };
+      console.log("Optimistic message added:", tempMessage);
+      setMessages((prev) => [...prev, tempMessage]);
+      socket.emit(
+        "sendMessage",
+        {
+          senderId: mentorId,
+          receiverId: selectedUser.userId,
+          content: newMessage,
+          tempId: tempMessage.tempId,
         },
-      },
-    },
-    {
-      $group: {
-        _id: '$otherUserId',
-        latestMessage: { $first: '$content' },
-        latestMessageTime: { $first: '$createdAt' },
-      },
-    },
-    {
-      $lookup: {
-        from: 'users',
-        let: { uid: { $toObjectId: '$_id' } },
-        pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$uid'] } } }],
-        as: 'user',
-      },
-    },
-    { $unwind: '$user' },
-    {
-      $project: {
-        userId: '$_id',
-        username: '$user.username',
-        email: '$user.personal.email',
-        latestMessage: 1,
-        latestMessageTime: 1,
-      },
-    },
-  ]);
-
-  res.json(userMessages);
-}));
-
-module.exports.setupSocket = (io) => {
-  const mentorNamespace = io.of('/mentor-chat');
-  mentorNamespace.on('connection', (socket) => {
-    console.log('A user connected to /mentor-chat:', socket.id);
-
-    socket.on('joinMentor', async (mentorId) => {
-      try {
-        if (!mongoose.isValidObjectId(mentorId)) {
-          console.error('Invalid mentorId:', mentorId);
-          return;
-        }
-        const mentor = await Mentor.findById(mentorId);
-        if (mentor) {
-          socket.join(mentorId);
-          mentor.isOnline = true;
-          await mentor.save();
-          mentorNamespace.emit('mentorStatus', { mentorId, isOnline: true });
-        }
-      } catch (error) {
-        console.error('Error joining mentor:', error);
-      }
-    });
-
-    socket.on('joinChat', ({ userId, mentorId }) => {
-      if (!mongoose.isValidObjectId(userId) || !mongoose.isValidObjectId(mentorId)) {
-        console.error('Invalid userId or mentorId:', { userId, mentorId });
-        return;
-      }
-      const room = [userId, mentorId].sort().join('_');
-      socket.join(room);
-    });
-
-    socket.on('sendMessage', async ({ senderId, receiverId, content, tempId, debugId }, callback) => {
-      console.log(`Received sendMessage (debugId: ${debugId}) on /mentor-chat:`, { senderId, receiverId, content });
-      try {
-        if (!mongoose.isValidObjectId(senderId) || !mongoose.isValidObjectId(receiverId)) {
-          throw new Error('Invalid senderId or receiverId');
-        }
-
-        const sender = await User.findById(senderId) || await Mentor.findById(senderId);
-        const receiver = await User.findById(receiverId) || await Mentor.findById(receiverId);
-
-        if (!sender || !receiver) {
-          throw new Error('Sender or receiver not found');
-        }
-
-        // Check for duplicate message
-        const existingMessage = await Message.findOne({
-          senderId,
-          receiverId,
-          content,
-          timestamp: { $gte: new Date(Date.now() - 1000) },
-        });
-        if (existingMessage) {
-          console.log(`Duplicate message detected (debugId: ${debugId}) on /mentor-chat`);
-          if (typeof callback === 'function') {
-            callback({ status: 'error', error: 'Duplicate message' });
+        (response) => {
+          console.log("Send message response:", response);
+          if (response.status === "error") {
+            console.error("Send message failed:", response.error);
+            setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessage.tempId));
+            setError(response.error);
+            toast.error(response.error);
           }
-          return;
         }
+      );
+      setNewMessage("");
+    }
+  };
 
-        const message = new Message({
-          senderId,
-          receiverId,
-          content,
-          createdAt: new Date(),
-        });
-        await message.save();
+  if (selectedUser) {
+    return (
+      <div
+        className="flex h-screen bg-gradient-to-br from-blue-50 to-gray-100"
+        style={{ backgroundImage: "linear-gradient(to bottom right, #e0f7fa, #f0f4f8)" }}
+      >
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+          {/* Chat Header */}
+          <div className="bg-white shadow-md border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={handleBackToList} className="hover:bg-gray-100">
+                <ArrowLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+              <Avatar className="h-12 w-12 border-2 border-blue-200">
+                <AvatarImage src="/placeholder.svg" alt={selectedUser.username} className="object-cover" />
+                <AvatarFallback className="bg-blue-100 text-blue-800">{selectedUser.username[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="font-bold text-xl text-gray-900">{selectedUser.username}</h2>
+                <p className="text-sm text-gray-600">{selectedUser.email}</p>
+              </div>
+            </div>
+          </div>
 
-        const messageData = {
-          _id: message._id,
-          senderId: message.senderId.toString(),
-          receiverId: message.receiverId.toString(),
-          content: message.content,
-          timestamp: message.createdAt,
-          tempId,
-        };
+          {/* Chat Messages */}
+          <div className="flex-1 p-6 overflow-y-auto bg-white/80 backdrop-blur-md rounded-lg shadow-inner">
+            {loading && <p className="text-center text-gray-500 animate-pulse">Loading messages...</p>}
+            {error && <p className="text-center text-red-500">{error}</p>}
+            <div className="space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg._id || msg.tempId}
+                  className={`flex ${
+                    msg.senderId.toString() === mentorId ? "justify-end" : "justify-start"
+                  } animate-fade-in`}
+                >
+                  <div
+                    className={`rounded-lg p-3 max-w-[70%] ${
+                      msg.senderId.toString() === mentorId
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-900 shadow-md"
+                    }`}
+                  >
+                    <p className="text-sm break-words">{msg.message || msg.content}</p>
+                    <span
+                      className={`text-xs mt-1 block ${
+                        msg.senderId.toString() === mentorId ? "text-blue-200" : "text-gray-500"
+                      }`}
+                    >
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        const room = [senderId, receiverId].sort().join('_');
-        mentorNamespace.to(room).emit('receiveMessage', messageData);
+          {/* Message Input */}
+          <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Type your reply..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+              />
+              <Button
+                onClick={handleSendMessage}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Send
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        if (typeof callback === 'function') {
-          callback({ status: 'success', message: messageData });
-        }
-      } catch (error) {
-        console.error(`Error sending message (debugId: ${debugId}) on /mentor-chat:`, error);
-        if (typeof callback === 'function') {
-          callback({ status: 'error', error: error.message });
-        }
-      }
-    });
+  return (
+    <div
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100"
+      style={{ backgroundImage: "linear-gradient(to bottom right, #e0f7fa, #f0f4f8)" }}
+    >
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Your Messages
+          </h1>
+          <p className="text-gray-600 text-lg">View and manage your conversations</p>
+        </div>
 
-    socket.on('disconnect', async () => {
-      try {
-        const mentor = await Mentor.findOne({ socketId: socket.id });
-        if (mentor) {
-          mentor.isOnline = false;
-          await mentor.save();
-          mentorNamespace.emit('mentorStatus', { mentorId: mentor._id, isOnline: false });
-        }
-        console.log('User disconnected from /mentor-chat:', socket.id);
-      } catch (error) {
-        console.error('Error on disconnect from /mentor-chat:', error);
-      }
-    });
-  });
-};
+        {loading && <p className="text-center text-gray-500 animate-pulse">Loading users...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
+        {!loading && !error && users.length === 0 && (
+          <p className="text-gray-500 text-center py-12">No messages yet.</p>
+        )}
 
-module.exports.router = router;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {users.map((user) => (
+            <Card
+              key={user.userId}
+              className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/90 backdrop-blur-md border border-gray-100"
+            >
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-14 w-14 border-2 border-indigo-200">
+                    <AvatarImage src="/placeholder.svg" alt={user.username} className="object-cover" />
+                    <AvatarFallback className="bg-indigo-100 text-indigo-800">{user.username[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{user.username}</h3>
+                    <p className="text-sm text-gray-600 truncate">{user.latestMessage}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(user.latestMessageTime).toLocaleString([], {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => handleUserClick(user)}
+                  className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-2 transition-all duration-200"
+                >
+                  Active Chat
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
