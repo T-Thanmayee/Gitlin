@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
-import { ModeToggle } from "../../components/mode-toggle";
 "use client"
 
-import { useRef } from "react"
+import { useState, useEffect, useRef } from "react"
+import { Search, X, Bell, User, ChevronDown, LogOut, UserCircle } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { ModeToggle } from "@/components/mode-toggle"
 
 const Navbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false)
@@ -18,20 +26,19 @@ const Navbar = () => {
       setIsMediumScreen(window.innerWidth >= 715)
     }
 
-    // Initial check
     checkScreenSize()
-
-    // Add event listener
     window.addEventListener("resize", checkScreenSize)
-
-    // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize)
   }, [])
 
   // Handle clicks outside search
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isSearchExpanded && searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+      if (
+        isSearchExpanded &&
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target )
+      ) {
         setIsSearchExpanded(false)
       }
     }
@@ -47,13 +54,39 @@ const Navbar = () => {
     }
   }, [isSearchExpanded])
 
-  const toggleNav = () => {
-    setIsNavOpen(!isNavOpen)
-  }
+  const toggleNav = () => setIsNavOpen(!isNavOpen)
+  const toggleSearch = () => setIsSearchExpanded(!isSearchExpanded)
 
-  const toggleSearch = () => {
-    setIsSearchExpanded(!isSearchExpanded)
-  }
+  // Services dropdown items (now contains About, FAQs, Contact)
+  const servicesItems = [
+    { name: "About", href: "/about" },
+    { name: "FAQs", href: "/faqs" },
+    { name: "Contact", href: "/contact" },
+  ]
+
+  // Sample notifications
+  const notifications = [
+    {
+      id: 1,
+      title: "New message received",
+      time: "2 min ago",
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Project update available",
+      time: "1 hour ago",
+      read: false,
+    },
+    {
+      id: 3,
+      title: "Payment processed successfully",
+      time: "3 hours ago",
+      read: true,
+    },
+  ]
+
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
     <>
@@ -69,7 +102,6 @@ const Navbar = () => {
               <button onClick={() => setIsSearchExpanded(false)} className="text-gray-500 dark:text-gray-400">
                 <X className="h-5 w-5" />
               </button>
-
               <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2">
                 <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 <input
@@ -88,7 +120,6 @@ const Navbar = () => {
         {/* Logo */}
         <div className="flex items-center space-x-10">
           <div className="text-xl font-bold">MyLogo</div>
-
           {/* Search - visible on medium screens and up */}
           {isMediumScreen && (
             <div className="search-container flex items-center justify-center">
@@ -119,6 +150,63 @@ const Navbar = () => {
           )}
         </div>
 
+        {/* Navigation Links */}
+        <ul
+          className={`fixed top-14 right-0 w-full flex flex-col items-center transition-transform duration-300 md:static md:flex-row md:w-auto md:space-x-6 md:transform-none ${
+            isNavOpen ? "translate-x-0 bg-green-700 p-5" : "translate-x-full md:translate-x-0"
+          }`}
+        >
+          <li className="p-1 md:py-0">
+            <a
+              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              href="#"
+            >
+              Home
+            </a>
+          </li>
+
+          {/* Services Dropdown (now contains About, FAQs, Contact) */}
+          <li className="py-2 md:py-0 relative group">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 relative cursor-pointer">
+                  Services
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 mt-2">
+                <DropdownMenuLabel>Quick Links</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {servicesItems.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <a href={item.href} className="cursor-pointer">
+                      {item.name}
+                    </a>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </li>
+
+          <li className="py-2 md:py-0">
+            <a
+              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              href="/register"
+            >
+              Register
+            </a>
+          </li>
+          <li className="py-2 md:py-0">
+            <a
+              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              href="/login"
+            >
+              Login
+            </a>
+          </li>
+        </ul>
+
+        {/* Right Side Icons */}
         <div className="flex items-center gap-4">
           {/* Search icon - visible only on small screens */}
           {!isMediumScreen && (
@@ -130,6 +218,79 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </button>
           )}
+
+          {/* Mode Toggle */}
+          <ModeToggle className="" />
+
+          {/* Notification Icon with Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="relative p-2 text-white hover:bg-green-700 dark:hover:bg-green-600 rounded-full transition-colors">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs border-2 border-green-600">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 mt-2" align="end">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {unreadCount} new
+                  </Badge>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
+                    <div className="flex items-start justify-between w-full">
+                      <div className="flex-1">
+                        <p className={`text-sm ${!notification.read ? "font-semibold" : "font-normal"}`}>
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                      </div>
+                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>}
+                    </div>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled>
+                  <span className="text-gray-500">No notifications</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-center text-blue-600 hover:text-blue-700 cursor-pointer">
+                View all notifications
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Profile Icon with Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 text-white hover:bg-green-700 dark:hover:bg-green-600 rounded-full transition-colors">
+                <User className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48 mt-2" align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <UserCircle className="mr-2 h-4 w-4" />
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer text-red-600 hover:text-red-700">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Hamburger Toggle Button */}
           <button
@@ -152,63 +313,6 @@ const Navbar = () => {
             ></span>
           </button>
         </div>
-
-        {/* Navigation Links */}
-        <ul
-          className={`fixed top-14 right-0 w-full flex flex-col items-center transition-transform duration-300 md:static md:flex-row md:w-auto md:space-x-6 md:transform-none ${
-            isNavOpen ? "translate-x-0 bg-green-700 p-5" : "translate-x-full md:translate-x-0"
-          }`}
-        >
-          <li className="p-1 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="#"
-            >
-              Home
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="#"
-            >
-              About
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="#"
-            >
-              FAQs
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="#"
-            >
-              Contact
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="/register"
-            >
-              Register
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="/login"
-            >
-              Login
-            </a>
-          </li>
-          <ModeToggle className="" />
-        </ul>
       </nav>
     </>
   )
