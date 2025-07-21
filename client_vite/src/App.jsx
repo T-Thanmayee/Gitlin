@@ -23,10 +23,10 @@ import DisplayUserWithSearch from './pages/ProfileUser/DisplayUserWithSearch';
 import { DetailedProfile } from './pages/ProfileUser/DetailedProfile';
 import ProfilePage from './pages/ProfileUser/ProfilePage';
 import EditProfile from './pages/ProfileUser/EditProfile';
-import AddProjectForm from './pages/Project Folder/AddProjectForm';
-import ProjectSearchPage from './pages/Project Folder/ProjectSearchPage';
+import AddProjectForm from './pages/Project_Folder/AddProjectForm';
+import ProjectSearchPage from './pages/Project_Folder/ProjectSearchPage';
 import RegisterMentor from './pages/ProfileUser/registermentor';
-import { Card3 } from './pages/Project Folder/Card3';
+import { Card3 } from './pages/Project_Folder/Card3';
 import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 const userId="68513b0287655694a9350b08"
 function App() {

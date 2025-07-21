@@ -39,22 +39,24 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(mentors);
 }));
 
-router.get('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
-  if (!mentor) {
-    return res.status(404).json({ message: 'Mentor not found' });
-  }
-  res.json(mentor);
-}));
+
 
 router.get('/:mentorId', asyncHandler(async (req, res) => {
+  console.log("called me...")
   const mentor = await Mentor.findById(req.params.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
   res.json(mentor);
 }));
-
+router.get('/:shortName', asyncHandler(async (req, res) => {
+  
+  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+  if (!mentor) {
+    return res.status(404).json({ message: 'Mentor not found' });
+  }
+  res.json(mentor);
+}));
 router.post(
   '/',
   upload.single('profilePicture'),

@@ -29,9 +29,39 @@ export default function MentorChatPage() {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
+  // Utility to normalize timestamps
+  const normalizeTimestamp = (timestamp) => {
+    if (!timestamp) {
+      console.warn("No timestamp provided, using current time");
+      return new Date();
+    }
+    const timeRegex = /^(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)$/i;
+    if (timeRegex.test(timestamp)) {
+      const today = new Date();
+      const [_, hours, minutes, seconds, period] = timestamp.match(timeRegex);
+      let hours24 = parseInt(hours, 10);
+      if (period.toUpperCase() === "PM" && hours24 !== 12) hours24 += 12;
+      if (period.toUpperCase() === "AM" && hours24 === 12) hours24 = 0;
+      return new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+        hours24,
+        parseInt(minutes, 10),
+        parseInt(seconds, 10)
+      );
+    }
+    const parsedDate = new Date(timestamp);
+    if (isNaN(parsedDate)) {
+      console.warn("Invalid timestamp format, using current time:", timestamp);
+      return new Date();
+    }
+    return parsedDate;
+  };
+
   // Initialize Socket.IO with /mentor-chat namespace
   useEffect(() => {
-    socketRef.current = io("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentor-chat", {
+    socketRef.current = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentor-chat", {
       withCredentials: true,
     });
     console.log("Socket.IO connecting to /mentor-chat...");
@@ -50,7 +80,7 @@ export default function MentorChatPage() {
     });
 
     socketRef.current.on("receiveMessage", (message) => {
-      console.log("Received message on /mentor-chat:", message);
+      console.log("Received message:", message);
       setMessages((prev) => {
         if (prev.some((msg) => msg.id === message._id.toString() || msg.tempId === message.tempId)) {
           console.log("Duplicate message ignored:", message._id || message.tempId);
@@ -63,7 +93,7 @@ export default function MentorChatPage() {
             senderId: message.senderId,
             receiverId: message.receiverId,
             content: message.content,
-            createdAt: new Date(message.timestamp),
+            createdAt: normalizeTimestamp(message.timestamp),
             isOwn: message.senderId === userId,
             senderName: message.senderId === userId ? "You" : selectedMentor?.name || "Mentor",
           },
@@ -108,7 +138,7 @@ export default function MentorChatPage() {
           else if (priceFilter === "above-60") params.price = "60";
         }
 
-        const response = await axios.get("https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors", { params });
+        const response = await axios.get("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors", { params });
         setMentors(response.data);
         setError(null);
       } catch (error) {
@@ -129,10 +159,19 @@ export default function MentorChatPage() {
         setLoading(true);
         try {
           const response = await axios.get(
-            `https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/mentors/${selectedMentor.shortName}/chat?userId=${userId}`
+            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${selectedMentor.shortName}/chat?userId=${userId}`
           );
           console.log("Chat history fetched:", response.data);
-          setMessages(response.data);
+          const normalizedMessages = response.data.map((msg) => ({
+            id: msg.id,
+            senderId: msg.senderId,
+            receiverId: selectedMentor._id,
+            content: msg.message,
+            createdAt: normalizeTimestamp(msg.timestamp),
+            isOwn: msg.isOwn || msg.senderId === userId,
+            senderName: msg.senderName || (msg.senderId === userId ? "You" : selectedMentor?.name || "Mentor"),
+          }));
+          setMessages(normalizedMessages);
           setError(null);
         } catch (error) {
           console.error("Error fetching chat history:", error);
@@ -182,7 +221,6 @@ export default function MentorChatPage() {
         isOwn: true,
         senderName: "You",
       };
-      // Optimistically add message to UI
       setMessages((prev) => [...prev, tempMessage]);
       socketRef.current.emit(
         "sendMessage",
@@ -197,8 +235,15 @@ export default function MentorChatPage() {
           console.log("Send message response:", response);
           if (response.status === "error") {
             toast.error(response.error);
-            // Remove optimistic message on error
             setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
+          } else {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.tempId === tempId
+                  ? { ...msg, id: response.messageId || msg.id, tempId: undefined }
+                  : msg
+              )
+            );
           }
         }
       );
@@ -286,7 +331,9 @@ export default function MentorChatPage() {
                     <span
                       className={`text-xs mt-1 block ${msg.isOwn ? "text-blue-100" : "text-gray-500"}`}
                     >
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {msg.createdAt && !isNaN(new Date(msg.createdAt))
+                        ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                        : "Just now"}
                     </span>
                   </div>
                 </div>
@@ -337,7 +384,8 @@ export default function MentorChatPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem
+                  value="all">All Status</SelectItem>
                 <SelectItem value="online">Online Only</SelectItem>
                 <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>

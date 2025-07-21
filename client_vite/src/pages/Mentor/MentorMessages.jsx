@@ -137,6 +137,7 @@ export default function MentorMessages() {
 
   const handleUserClick = async (user) => {
     try {
+      console.log(mentorId)
       const mentorResponse = await axios.get(
         `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}`
       );

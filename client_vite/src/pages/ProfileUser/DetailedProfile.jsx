@@ -34,7 +34,7 @@ import {
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import CollabCard from "../Project Folder/CollabCard"; // Adjust the import path as necessary
+import CollabCard from "../Project_Folder/CollabCard"; // Adjust the import path as necessary
 
 export function DetailedProfile({ data, userId, currentUserId }) {
   const [activeTab, setActiveTab] = useState("about");
