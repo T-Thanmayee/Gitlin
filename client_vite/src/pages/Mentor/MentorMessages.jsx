@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,28 +10,42 @@ import { Card, CardContent } from "@/components/ui/card";
 import axios from "axios";
 import io from "socket.io-client";
 import { toast } from "sonner";
+import { fetchChatHistory, addMessage, removeMessage } from "../../Redux/Slices/authSlice";
 
-// Initialize Socket.IO client
-const socket = io("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentor-chat", {
-  withCredentials: true,
-});
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
 
 export default function MentorMessages() {
+  const dispatch = useDispatch();
+  const { currentUser, isPending, errorOccured, errorMessage } = useSelector((state) => state.auth);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const mentorId = "6877d6f580b7beac37c9fb99"; // Replace with your mentor's ObjectId
+
+  // Initialize Socket.IO client with authentication
+  const socket = io(`${API_URL}/mentor-chat`, {
+    auth: {
+      token: sessionStorage.getItem('Token'),
+    },
+    withCredentials: true,
+  });
 
   // Fetch users who messaged the mentor
   useEffect(() => {
+    if (!currentUser._id) return;
+
     const fetchUsers = async () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}/messages/users`
+          `${API_URL}/mentors/${currentUser._id}/messages/users`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('Token')}`,
+            },
+          }
         );
         console.log("Fetched users:", response.data);
         setUsers(response.data);
@@ -47,7 +61,7 @@ export default function MentorMessages() {
 
     fetchUsers();
 
-    socket.emit("joinMentor", mentorId, (response) => {
+    socket.emit("joinMentor", currentUser._id, (response) => {
       console.log("Joined mentor room:", response || "No response");
     });
 
@@ -57,23 +71,31 @@ export default function MentorMessages() {
         selectedUser &&
         (message.senderId.toString() === selectedUser.userId.toString() ||
           message.receiverId.toString() === selectedUser.userId.toString()) &&
-        (message.senderId.toString() === mentorId || message.receiverId.toString() === mentorId)
+        (message.senderId.toString() === currentUser._id || message.receiverId.toString() === currentUser._id)
       ) {
+        dispatch(addMessage({
+          id: message._id,
+          senderId: message.senderId,
+          receiverId: message.receiverId,
+          content: message.content,
+          timestamp: message.timestamp,
+          isOwn: message.senderId === currentUser._id,
+          senderName: message.senderId === currentUser._id ? "You" : selectedUser.username,
+        }));
         setMessages((prev) => {
-          // Remove optimistic message with matching tempId
           const filteredMessages = prev.filter((msg) => !msg.tempId || msg.tempId !== message.tempId);
           return [
             ...filteredMessages,
             {
               id: message._id,
               senderId: message.senderId,
-              senderName: message.senderId === mentorId ? "You" : selectedUser.username,
-              message: message.content, // Use message.content for consistency
+              senderName: message.senderId === currentUser._id ? "You" : selectedUser.username,
+              message: message.content,
               timestamp: new Date(message.timestamp).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
-              isOwn: message.senderId === mentorId,
+              isOwn: message.senderId === currentUser._id,
             },
           ];
         });
@@ -103,46 +125,53 @@ export default function MentorMessages() {
       socket.off("receiveMessage");
       socket.off("connect");
       socket.off("connect_error");
+      socket.disconnect();
     };
-  }, [selectedUser, mentorId]);
+  }, [selectedUser, currentUser._id, dispatch]);
 
   // Fetch chat history when a user is selected
   useEffect(() => {
-    if (selectedUser) {
-      const fetchChatHistory = async () => {
-        setLoading(true);
-        try {
-          const response = await axios.get(
-            `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${selectedUser.mentorShortName}/chat`,
-            { params: { userId: selectedUser.userId } }
-          );
-          console.log("Fetched chat history:", response.data);
-          setMessages(response.data);
+    if (selectedUser && currentUser._id) {
+      dispatch(fetchChatHistory({ userId: selectedUser.userId, mentorShortName: selectedUser.mentorShortName }))
+        .unwrap()
+        .then((data) => {
+          setMessages(data.map((msg) => ({
+            id: msg._id,
+            senderId: msg.senderId,
+            senderName: msg.senderId === currentUser._id ? "You" : selectedUser.username,
+            message: msg.content,
+            timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            isOwn: msg.senderId === currentUser._id,
+          })));
           setError(null);
-        } catch (error) {
-          console.error("Error fetching chat history:", error.response?.data || error.message);
+        })
+        .catch((error) => {
+          console.error("Error fetching chat history:", error);
           setError("Failed to load chat history. Please try again.");
           toast.error("Failed to load chat history.");
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchChatHistory();
+        });
 
-      socket.emit("joinChat", { userId: selectedUser.userId, mentorId }, (response) => {
+      socket.emit("joinChat", { userId: selectedUser.userId, mentorId: currentUser._id }, (response) => {
         console.log("Joined chat room:", response || "No response");
       });
     }
-  }, [selectedUser]);
+  }, [selectedUser, currentUser._id, dispatch]);
 
   const handleUserClick = async (user) => {
     try {
-      console.log(mentorId)
       const mentorResponse = await axios.get(
-        `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorId}`
+        `${API_URL}/mentors/${currentUser._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('Token')}`,
+          },
+        }
       );
       setSelectedUser({ ...user, mentorShortName: mentorResponse.data.shortName });
-      setMessages([]); // Clear messages before loading new chat
+      setMessages([]);
     } catch (error) {
       console.error("Error fetching mentor shortName:", error.response?.data || error.message);
       toast.error("Failed to load mentor details.");
@@ -156,28 +185,35 @@ export default function MentorMessages() {
   };
 
   const handleSendMessage = () => {
-    if (newMessage.trim() && selectedUser) {
+    if (newMessage.trim() && selectedUser && currentUser._id) {
       const tempId = Date.now().toString();
       const tempMessage = {
         id: tempId,
         tempId,
-        senderId: mentorId,
+        senderId: currentUser._id,
         senderName: "You",
-        message: newMessage, // Use message for consistency
+        message: newMessage,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isOwn: true,
       };
       console.log("Optimistic message added:", tempMessage);
       setMessages((prev) => [...prev, tempMessage]);
+      dispatch(addMessage({
+        senderId: currentUser._id,
+        receiverId: selectedUser.userId,
+        content: newMessage,
+        tempId,
+        timestamp: new Date().toISOString(),
+      }));
 
       socket.emit(
         "sendMessage",
         {
-          senderId: mentorId,
+          senderId: currentUser._id,
           receiverId: selectedUser.userId,
           content: newMessage,
           tempId,
-          debugId: tempId, // For debugging
+          debugId: tempId,
           context: "mentor",
         },
         (response) => {
@@ -185,6 +221,7 @@ export default function MentorMessages() {
           if (response.status === "error") {
             console.error("Send message failed:", response.error);
             setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
+            dispatch(removeMessage(tempId));
             setError(response.error);
             toast.error(response.error);
           }
@@ -193,6 +230,14 @@ export default function MentorMessages() {
       setNewMessage("");
     }
   };
+
+  if (!currentUser._id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+        <p className="text-gray-600 text-lg">Please log in to view messages</p>
+      </div>
+    );
+  }
 
   if (selectedUser) {
     return (
@@ -220,19 +265,19 @@ export default function MentorMessages() {
 
           {/* Chat Messages */}
           <div className="flex-1 p-6 overflow-y-auto bg-white/80 backdrop-blur-md rounded-lg shadow-inner">
-            {loading && <p className="text-center text-gray-500 animate-pulse">Loading messages...</p>}
-            {error && <p className="text-center text-red-500">{error}</p>}
+            {isPending && <p className="text-center text-gray-500 animate-pulse">Loading messages...</p>}
+            {errorOccured && <p className="text-center text-red-500">{errorMessage || error}</p>}
             <div className="space-y-4">
               {messages.map((msg) => (
                 <div
                   key={msg.id || msg.tempId}
                   className={`flex ${
-                    msg.senderId.toString() === mentorId ? "justify-end" : "justify-start"
+                    msg.senderId.toString() === currentUser._id ? "justify-end" : "justify-start"
                   } animate-fade-in`}
                 >
                   <div
                     className={`rounded-lg p-3 max-w-[70%] ${
-                      msg.senderId.toString() === mentorId
+                      msg.senderId.toString() === currentUser._id
                         ? "bg-blue-600 text-white shadow-lg"
                         : "bg-gray-100 text-gray-900 shadow-md"
                     }`}
@@ -240,7 +285,7 @@ export default function MentorMessages() {
                     <p className="text-sm break-words">{msg.message}</p>
                     <span
                       className={`text-xs mt-1 block ${
-                        msg.senderId.toString() === mentorId ? "text-blue-200" : "text-gray-500"
+                        msg.senderId.toString() === currentUser._id ? "text-blue-200" : "text-gray-500"
                       }`}
                     >
                       {msg.timestamp}
@@ -264,6 +309,7 @@ export default function MentorMessages() {
               <Button
                 onClick={handleSendMessage}
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
+                disabled={!newMessage.trim()}
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Send
