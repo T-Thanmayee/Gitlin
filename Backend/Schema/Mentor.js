@@ -1,57 +1,36 @@
 const mongoose = require('mongoose');
 
-// Mentor Schema
-const mentorSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    trim: true,
-    required: true
-  },
-  shortName: {
-    type: String,
-    unique: true,
-    trim: true,
-    required: true
-  },
-  profileImage: {
-    type: String,
-    default: '/placeholder.svg'
-  },
-  rating: {
-    type: Number,
-    min: 0,
-    max: 5,
-    default: 0
-  },
-  skills: {
-    type: [String],
-    default: []
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  experience: {
-    type: Number,
-    min: 0,
-    default: 0
-  },
-  price: {
-    type: Number,
-    min: 0,
-    default: 0
-  },
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+const reviewSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
-// Mentor Model
-const Mentor = mongoose.model('Mentor', mentorSchema);
+const mentorSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  shortName: { type: String, required: true, unique: true },
+  profileImage: { type: String },
+  rating: { type: Number, default: 0 },
+  skills: [{ type: String }],
+  description: { type: String },
+  experience: { type: Number },
+  price: { type: Number },
+  isOnline: { type: Boolean, default: false },
+  socketId: { type: String },
+  reviews: [reviewSchema],
+});
 
-module.exports = Mentor;
+// Calculate average rating before saving
+mentorSchema.pre('save', function (next) {
+  if (this.reviews.length > 0) {
+    const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0);
+    this.rating = parseFloat((totalRating / this.reviews.length).toFixed(1));
+  } else {
+    this.rating = 0;
+  }
+  next();
+});
+
+module.exports = mongoose.model('Mentor', mentorSchema);

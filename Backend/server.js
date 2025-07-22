@@ -78,7 +78,7 @@ const tutorials = require('./API/tutorials');
 const mentorsRouter = require('./API/Mentor'); // MentorChat module
 const chatroom = require('./API/Chatroom'); // LinkedInChat module
 
-app.use('/user', authMiddleware,usersInfo);
+app.use('/user',usersInfo);
 app.use('/projects', authMiddleware,projectInfo);
 app.use('/post',authMiddleware, postInfo);
 app.use('/mentors',authMiddleware, mentorsRouter.router); // Use mentorsRouter.router

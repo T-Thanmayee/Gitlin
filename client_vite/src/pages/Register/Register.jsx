@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
 
-const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/';
+const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/';
 console.log('Backend URL:', url);
 
 function Register() {

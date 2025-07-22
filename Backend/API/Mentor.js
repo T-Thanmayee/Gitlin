@@ -39,24 +39,22 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(mentors);
 }));
 
-
-
 router.get('/:mentorId', asyncHandler(async (req, res) => {
-  console.log("called me...")
   const mentor = await Mentor.findById(req.params.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
   res.json(mentor);
 }));
-router.get('/:shortName', asyncHandler(async (req, res) => {
-  
+
+router.get('/shortName/:shortName', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findOne({ shortName: req.params.shortName });
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
   res.json(mentor);
 }));
+
 router.post(
   '/',
   upload.single('profilePicture'),
@@ -65,12 +63,13 @@ router.post(
       name: req.body.name,
       shortName: req.body.shortName,
       profileImage: req.file ? req.file.buffer.toString('base64') : null,
-      rating: req.body.rating,
+      rating: req.body.rating || 0,
       skills: Array.isArray(req.body['skills']) ? req.body['skills'] : [req.body['skills']],
       description: req.body.bio || req.body.description,
       experience: req.body.experience,
       price: req.body.hourlyRate,
       isOnline: false,
+      reviews: [],
     });
 
     const newMentor = await mentor.save();
@@ -86,7 +85,6 @@ router.put('/:shortName', asyncHandler(async (req, res) => {
 
   mentor.name = req.body.name || mentor.name;
   mentor.profileImage = req.body.profileImage || mentor.profileImage;
-  mentor.rating = req.body.rating || mentor.rating;
   mentor.skills = req.body.skills || mentor.skills;
   mentor.description = req.body.description || mentor.description;
   mentor.experience = req.body.experience || mentor.experience;
@@ -105,6 +103,46 @@ router.delete('/:shortName', asyncHandler(async (req, res) => {
 
   await mentor.deleteOne();
   res.json({ message: 'Mentor deleted successfully' });
+}));
+
+router.post('/:shortName/reviews', asyncHandler(async (req, res) => {
+  const { userId, name, rating, comment } = req.body;
+
+  if (!mongoose.isValidObjectId(userId)) {
+    return res.status(400).json({ message: 'Invalid User ID format' });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+  if (!mentor) {
+    return res.status(404).json({ message: 'Mentor not found' });
+  }
+
+  const review = {
+    userId,
+    name,
+    rating: parseInt(rating),
+    comment,
+    date: new Date(),
+  };
+
+  mentor.reviews.push(review);
+  await mentor.save();
+
+  res.status(201).json(review);
+}));
+
+router.get('/:shortName/reviews', asyncHandler(async (req, res) => {
+  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+  if (!mentor) {
+    return res.status(404).json({ message: 'Mentor not found' });
+  }
+
+  res.json(mentor.reviews);
 }));
 
 router.get('/:shortName/chat', asyncHandler(async (req, res) => {
@@ -166,6 +204,8 @@ router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
           $cond: [{ $eq: ['$senderId', mentorId] }, '$receiverId', '$senderId'],
         },
       },
+
+
     },
     {
       $group: {
