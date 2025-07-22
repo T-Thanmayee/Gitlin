@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, MessageCircle, Video, Phone, MoreVertical, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export default function MentorChatPage() {
   const userId = "68513ba087655694a9350b1b"; // Default userId
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate(); // For navigation
 
   // Utility to normalize timestamps
   const normalizeTimestamp = (timestamp) => {
@@ -199,6 +201,10 @@ export default function MentorChatPage() {
     setShowChat(true);
   };
 
+  const handleReadMoreClick = (mentorId) => {
+    navigate(`/mentor/${mentorId}`);
+  };
+
   const handleBackToList = () => {
     setShowChat(false);
     setSelectedMentor(null);
@@ -292,6 +298,9 @@ export default function MentorChatPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleReadMoreClick(selectedMentor._id)}>
+                  View Profile
+                </Button>
                 <Button variant="ghost" size="sm">
                   <Phone className="h-4 w-4" />
                 </Button>
@@ -305,7 +314,9 @@ export default function MentorChatPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem>View Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleReadMoreClick(selectedMentor._id)}>
+                      View Profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Schedule Session</DropdownMenuItem>
                     <DropdownMenuItem>Block Mentor</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -384,8 +395,7 @@ export default function MentorChatPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="online">Online Only</SelectItem>
                 <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
@@ -449,7 +459,14 @@ export default function MentorChatPage() {
                     <Badge variant="secondary" className="mb-2">
                       {mentor.skills.join(", ")}
                     </Badge>
-                    <p className="text-sm text-gray-600 mb-3">{mentor.description}</p>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{mentor.description}</p>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto text-blue-600 hover:underline"
+                      onClick={() => handleReadMoreClick(mentor._id)}
+                    >
+                      Read More
+                    </Button>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">

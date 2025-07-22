@@ -42,7 +42,7 @@ export default function MentorPage() {
         setMentorData(mentor);
 
         // Fetch reviews using mentor's shortName
-        const reviewsResponse = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/shortName/${mentor.shortName}/reviews`);
+        const reviewsResponse = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentor.shortName}/reviews`);
         if (!reviewsResponse.ok) throw new Error('Failed to fetch reviews');
         const reviewsData = await reviewsResponse.json();
         setReviews(reviewsData.map(review => ({
@@ -76,11 +76,11 @@ export default function MentorPage() {
     e.preventDefault();
     if (newReview.name && newReview.rating && newReview.comment && mentorData) {
       try {
-        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/shortName/${mentorData.shortName}/reviews`, {
+        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/${mentorData.shortName}/reviews`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: 'current_user_id', // Replace with actual user ID from auth context
+            userId: '68513ba087655694a9350b1b', // Replace with actual user ID from auth context
             name: newReview.name,
             rating: newReview.rating,
             comment: newReview.comment,
