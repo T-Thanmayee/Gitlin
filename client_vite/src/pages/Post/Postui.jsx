@@ -7,6 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useSelector, useDispatch } from "react-redux";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Heart,
@@ -118,9 +120,9 @@ export default function Postui() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [following, setFollowing] = useState([]);
-
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
   const userId = "68513ba087655694a9350b1"; // Current user ID for likes/comments
-  const currentUserId = "68513ba087655694a9350b1b"; // Current user ID for following
+  const currentUserId = currentUser._id; // Current user ID for following
   const API_BASE_URL = "https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev";
 
   useEffect(() => {
@@ -128,7 +130,9 @@ export default function Postui() {
       try {
         const response = await fetch(`${API_BASE_URL}/user/${currentUserId}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            'Authorization':'Bearer ' + localStorage.getItem('Token') // Include token if needed
+           },
           credentials: "include",
         });
         if (!response.ok) {
@@ -148,7 +152,9 @@ export default function Postui() {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}/post/feed`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           },
           credentials: "include",
         });
         if (!response.ok) {
@@ -256,7 +262,9 @@ export default function Postui() {
 
       const response = await fetch(`${API_BASE_URL}/post/${postId}/share`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          'Authorization':`Bearer ${localStorage.getItem('Token')}` // Include token if needed
+         },
         credentials: "include",
         body: JSON.stringify({ userId }),
       });
@@ -320,7 +328,9 @@ export default function Postui() {
 
       const response = await fetch(`${API_BASE_URL}/post/${postId}/like`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          'Authorization':`Bearer ${localStorage.getItem('Token')}`
+         },
         credentials: "include",
         body: JSON.stringify({ userId:currentUserId, weight: 1 }),
       });
@@ -393,7 +403,8 @@ export default function Postui() {
     try {
       const response = await fetch(`${API_BASE_URL}/post/${postId}/comment`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          'Authorization':`Bearer ${localStorage.getItem('Token')}` },
         credentials: "include",
         body: JSON.stringify({ text: commentText[postId], userId: currentUserId }),
       });
@@ -444,7 +455,8 @@ export default function Postui() {
     try {
       const response = await fetch(`${API_BASE_URL}/post/${targetUserId}/follow`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+          'Authorization':`Bearer ${localStorage.getItem('Token')}`},
         credentials: "include",
         body: JSON.stringify({ userId: currentUserId }),
       });

@@ -24,6 +24,7 @@ import {
   XIcon,
 } from "lucide-react";
 import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
 
 export default function CreatePostui() {
   const [activeTab, setActiveTab] = useState("text");
@@ -35,8 +36,8 @@ export default function CreatePostui() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  const userId = "684ff902561fbc141c2f5137"; // Mocked userId (Sarah Chen)
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  const userId = currentUser._id; // Mocked userId (Sarah Chen)
   const baseUrl = "https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev";
 
   const addPollOption = () => {
@@ -82,12 +83,21 @@ export default function CreatePostui() {
         if (!postContent.trim()) {
           throw new Error("Content is required");
         }
-        const response = await axios.post(`${baseUrl}/post`, {
-          userId,
-          content: postContent,
-          type: "text",
-          tags,
-        });
+       const response = await axios.post(
+  `${baseUrl}/post`,
+  {
+    userId,
+    content: postContent,
+    type: "text",
+    tags,
+  },
+  {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed,
+    },
+  }
+);
         setSuccess("Text post created successfully!");
       } else if (activeTab === "photo") {
         if (!mediaFile) {
@@ -99,7 +109,11 @@ export default function CreatePostui() {
         formData.append("tags", JSON.stringify(tags));
         formData.append("file", mediaFile);
 
-        const response = await axios.post(`${baseUrl}/post/photo`, formData);
+        const response = await axios.post(`${baseUrl}/post/photo`,
+         {headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           }}
+          , formData);
         setSuccess("Image post created successfully!");
       } else if (activeTab === "video") {
         if (!mediaFile) {
@@ -124,7 +138,11 @@ export default function CreatePostui() {
         formData.append("tags", JSON.stringify(tags));
         formData.append("file", mediaFile);
 
-        const response = await axios.post(`${baseUrl}/post/doc`, formData);
+        const response = await axios.post(`${baseUrl}/post/doc`,
+         {headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           }}
+          , formData);
         setSuccess("Document post created successfully!");
       } else {
         throw new Error("Other post types are not implemented yet");
@@ -169,22 +187,8 @@ export default function CreatePostui() {
                 <ImageIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Photo</span>
               </TabsTrigger>
-              <TabsTrigger value="video" className="flex items-center gap-1">
-                <VideoIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Video</span>
-              </TabsTrigger>
-              <TabsTrigger value="poll" className="flex items-center gap-1">
-                <BarChart3Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">Poll</span>
-              </TabsTrigger>
-              <TabsTrigger value="event" className="flex items-center gap-1">
-                <CalendarIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Event</span>
-              </TabsTrigger>
-              <TabsTrigger value="job" className="flex items-center gap-1">
-                <BriefcaseIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Job</span>
-              </TabsTrigger>
+              
+             
               <TabsTrigger value="article" className="flex items-center gap-1">
                 <FileTextIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Article</span>

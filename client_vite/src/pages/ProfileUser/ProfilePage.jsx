@@ -2,21 +2,24 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DetailedProfile } from './DetailedProfile';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
+import { useSelector, useDispatch } from "react-redux";
 export default function ProfilePage() {
   const { userId } = useParams();
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const currentUserId = '68513ba087655694a9350b1b'; // Replace with auth system
+  // const currentUserId = '68513ba087655694a9350b1b'; // Replace with auth system
   const baseUrl = 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
-
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  console.log("currentUser:", currentUser);
   useEffect(() => {
     async function fetchData() {
       try {
         // Fetch user data
         const userResponse = await fetch(`${baseUrl}/user/${userId}`, {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           },
           credentials: 'include',
         });
         const userData = await userResponse.json();
@@ -25,8 +28,11 @@ export default function ProfilePage() {
         }
 
         // Fetch user posts
-        const postResponse = await fetch(`${baseUrl}/post/${currentUserId}`, {
-          headers: { 'Content-Type': 'application/json' },
+        const postResponse = await fetch(`${baseUrl}/post/${currentUser._id}`, {
+          headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+
+           },
           credentials: 'include',
         });
         const postData = await postResponse.json();
@@ -36,8 +42,10 @@ export default function ProfilePage() {
         console.log('Post Data:', postData);
 
         // Fetch user projects
-        const projectResponse = await fetch(`${baseUrl}/projects/user/${userId}`, {
-          headers: { 'Content-Type': 'application/json' },
+        const projectResponse = await fetch(`${baseUrl}/projects/user/${currentUser._id}`, {
+          headers: { 'Content-Type': 'application/json',
+            'Authorization':`Bearer ${localStorage.getItem('Token')}`
+           },
           credentials: 'include',
         });
         console.log("projectResponse:", projectResponse);
@@ -75,7 +83,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto p-4">
-      {userData && <DetailedProfile data={userData} userId={userId} currentUserId={currentUserId} />}
+      {userData && <DetailedProfile data={userData} userId={userId} currentUserId={currentUser._id} />}
     </div>
   );
 }

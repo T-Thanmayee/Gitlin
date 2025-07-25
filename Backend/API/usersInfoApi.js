@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require('../Schema/Users');
 const bcrypt = require('bcryptjs');
 const Post = require('../Schema/PostSchema');
+const jwt = require('jsonwebtoken');
 // @POST /user/register
 router.post('/register', async (req, res) => {
   try {
@@ -35,8 +36,8 @@ router.post('/login', async (req, res) => {
         email: user.personal.email,
         name: user.personal.name || 'Unknown',
       },
-      process.env.JWT_SECRET || 'your_jwt_secret_key', // Use environment variable for secret
-      { expiresIn: '1h' } // Token expires in 1 hour
+      process.env.JWT_SECRET || 'ltk242111', // Use environment variable for secret
+      { expiresIn: '2d' } // Token expires in 1 hour
     );
 
     // Prepare user data to send to frontend

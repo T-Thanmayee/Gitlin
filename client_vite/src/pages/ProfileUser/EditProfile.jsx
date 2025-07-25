@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Plus, Trash } from 'lucide-react';
-
+import { useSelector, useDispatch } from "react-redux";
 export default function EditProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
+   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     personal: {
       name: '',
@@ -32,7 +33,7 @@ export default function EditProfile() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(true);
-  const currentUserId = '684ff0364ab94bd6ad1006ad'; // Replace with auth system
+   // Replace with auth system
 
   useEffect(() => {
     
@@ -40,9 +41,11 @@ export default function EditProfile() {
     async function fetchUser() {
       try {
         const response = await fetch(
-          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${currentUserId}`,
+          `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${userId}`,
           {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+             },
             credentials: 'include',
           }
         );
@@ -76,7 +79,7 @@ export default function EditProfile() {
       }
     }
     fetchUser();
-  }, [userId, currentUserId, navigate]);
+  }, [userId, currentUser._id, navigate]);
 
   const handleChange = (e, section, index) => {
     const { name, value } = e.target;
@@ -127,10 +130,12 @@ export default function EditProfile() {
         education: formData.education,
       };
       const response = await fetch(
-        `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${currentUserId}`,
+        `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${userId}`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           },
           credentials: 'include',
           body: JSON.stringify(payload),
         }

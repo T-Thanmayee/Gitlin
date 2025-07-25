@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import io from "socket.io-client";
+import { useSelector, useDispatch } from "react-redux";
+
 import axios from "axios";
 
 export default function LinkedInChatPage({ userId }) {

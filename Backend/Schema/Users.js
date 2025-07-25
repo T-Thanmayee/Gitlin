@@ -2,21 +2,21 @@
 const mongoose = require('mongoose');
 
 const educationSchema = new mongoose.Schema({
-  institution: { type: String, required: true },
-  degree: { type: String, required: true },
-  field: { type: String, required: true },
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
+  institution: { type: String },
+  degree: { type: String },
+  field: { type: String },
+  startDate: { type: String },
+  endDate: { type: String },
   description: { type: String },
 });
 
 const experienceSchema = new mongoose.Schema({
-  company: { type: String, required: true },
-  title: { type: String, required: true },
-  location: { type: String, required: true },
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
-  description: { type: String, required: true },
+  company: { type: String },
+  title: { type: String },
+  location: { type: String },
+  startDate: { type: String },
+  endDate: { type: String},
+  description: { type: String },
 });
 
 const personalSchema = new mongoose.Schema({

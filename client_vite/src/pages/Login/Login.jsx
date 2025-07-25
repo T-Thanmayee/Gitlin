@@ -1,47 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
+import { loginUser } from '../../Redux/Slices/authSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import axios from 'axios';
-
-const url = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://solid-sniffle-4jqqqqx79prv3j74w-4000.app.github.dev/';
 
 export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isPending, errorOccured, errorMessage } = useSelector((state) => state.auth); // Access Redux state
 
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post(`${url}user/login`, { email, password }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 5000,
-      });
-
-      if (response.data.message === 'Login successful') {
-        window.sessionStorage.setItem('email', email);
-        window.sessionStorage.setItem('userId', response.data.userId);
-        navigate('/'); // Redirect to Home
-      } else {
-        setError('Invalid email or password');
-      }
+      const result = await dispatch(loginUser({ email, password })).unwrap();
+      // If login is successful, loginUser sets sessionStorage and localStorage in the slice
+      navigate('/'); // Redirect to Home
     } catch (error) {
+      // Error is handled by the authSlice, and errorMessage is set
       console.error('Login Error:', error);
-      if (error.response?.status === 404) {
-        setError('User not found. Please register first.');
-      } else if (error.response?.status === 401) {
-        setError('Incorrect password');
-      } else {
-        setError('Failed to connect to the server: ' + error.message);
-      }
     }
   };
 
@@ -59,37 +43,45 @@ export default function LoginPage() {
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      dispatch({ type: 'auth/setError', payload: 'Password must be at least 8 characters long.' });
       return;
     }
 
     if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecialChar) {
-      setError('Password must include at least one uppercase letter, one lowercase letter, one number, and one special character.');
+      dispatch({
+        type: 'auth/setError',
+        payload:
+          'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character.',
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Password does not match the confirm password.');
+      dispatch({ type: 'auth/setError', payload: 'Password does not match the confirm password.' });
       return;
     }
 
     try {
-      const response = await axios.post(`${url}user/reset-password`, { email, newPassword: password }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 5000,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/'}user/reset-password`,
+        { email, newPassword: password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 5000,
+        }
+      );
 
       if (response.data.message === 'Password updated successfully') {
         window.sessionStorage.setItem('password', password);
         navigate('/'); // Redirect to Home
       } else {
-        setError('Failed to update password: ' + response.data.message);
+        dispatch({ type: 'auth/setError', payload: 'Failed to update password: ' + response.data.message });
       }
     } catch (error) {
       console.error('Password Reset Error:', error);
-      setError('Failed to connect to the server: ' + error.message);
+      dispatch({ type: 'auth/setError', payload: 'Failed to connect to the server: ' + error.message });
     }
   };
 
@@ -99,10 +91,10 @@ export default function LoginPage() {
         <h1 className="text-2xl font-semibold italic text-gray-800 dark:text-white mb-4 text-center font-serif">
           Come find your path — do projects, build profiles, grow together.
         </h1>
-        <img 
-          src="https://img.freepik.com/premium-vector/woman-sitting-with-laptop-concept-illustration-working-studying-education-work-from-home-healthy-lifestyle_186332-153.jpg?w=360" 
-          alt="Illustration" 
-          className="max-w-full h-auto rounded-lg shadow-md" 
+        <img
+          src="https://img.freepik.com/premium-vector/woman-sitting-with-laptop-concept-illustration-working-studying-education-work-from-home-healthy-lifestyle_186332-153.jpg?w=360"
+          alt="Illustration"
+          className="max-w-full h-auto rounded-lg shadow-md"
         />
       </div>
 
@@ -141,17 +133,21 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </Button>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 rounded-full">
-                  Login
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 rounded-full"
+                  disabled={isPending}
+                >
+                  {isPending ? 'Logging in...' : 'Login'}
                 </Button>
                 <div className="flex justify-around mt-4">
                   <SocialButton icon="facebook" />
                   <SocialButton icon="google" />
                   <SocialButton icon="linkedin" />
                 </div>
-                {error && (
+                {errorOccured && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{errorMessage}</AlertDescription>
                   </Alert>
                 )}
               </form>
@@ -164,7 +160,9 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
-                <label htmlFor="new-password" className="text-sm font-medium">Password</label>
+                <label htmlFor="new-password" className="text-sm font-medium">
+                  Password
+                </label>
                 <Input
                   type="password"
                   id="new-password"
@@ -172,7 +170,9 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
+                <label htmlFor="confirm-password" className="text-sm font-medium">
+                  Confirm Password
+                </label>
                 <Input
                   type="password"
                   id="confirm-password"
@@ -180,9 +180,9 @@ export default function LoginPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
-                {error && (
+                {errorOccured && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{errorMessage}</AlertDescription>
                   </Alert>
                 )}
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">

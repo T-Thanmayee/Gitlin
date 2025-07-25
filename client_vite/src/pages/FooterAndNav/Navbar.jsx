@@ -1,7 +1,7 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import { Search, X, Bell, User, ChevronDown, LogOut, UserCircle } from "lucide-react"
+import { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Search, X, ChevronDown, User, LogOut, UserCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,27 +9,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { ModeToggle } from "@/components/mode-toggle"
+} from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Import Alert for errors
+import { ModeToggle } from "@/components/mode-toggle";
+import { logoutUser } from "../../Redux/Slices/authSlice"; // Import logoutUser thunk
 
 const Navbar = () => {
-  const [isNavOpen, setIsNavOpen] = useState(false)
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
-  const [isMediumScreen, setIsMediumScreen] = useState(false)
-  const searchInputRef = useRef(null)
-  const searchContainerRef = useRef(null)
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const searchInputRef = useRef(null);
+  const searchContainerRef = useRef(null);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
 
   // Check screen size on mount and resize
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMediumScreen(window.innerWidth >= 715)
-    }
+      setIsMediumScreen(window.innerWidth >= 715);
+    };
 
-    checkScreenSize()
-    window.addEventListener("resize", checkScreenSize)
-    return () => window.removeEventListener("resize", checkScreenSize)
-  }, [])
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Handle clicks outside search
   useEffect(() => {
@@ -37,69 +42,60 @@ const Navbar = () => {
       if (
         isSearchExpanded &&
         searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target )
+        !searchContainerRef.current.contains(event.target)
       ) {
-        setIsSearchExpanded(false)
+        setIsSearchExpanded(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isSearchExpanded])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSearchExpanded]);
 
   // Focus input when search expands
   useEffect(() => {
     if (isSearchExpanded && searchInputRef.current) {
-      searchInputRef.current.focus()
+      searchInputRef.current.focus();
     }
-  }, [isSearchExpanded])
+  }, [isSearchExpanded]);
 
-  const toggleNav = () => setIsNavOpen(!isNavOpen)
-  const toggleSearch = () => setIsSearchExpanded(!isSearchExpanded)
+  const toggleNav = () => setIsNavOpen(!isNavOpen);
+  const toggleSearch = () => setIsSearchExpanded(!isSearchExpanded);
 
-  // Services dropdown items (now contains About, FAQs, Contact)
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  };
+
+  // Services dropdown items
   const servicesItems = [
     { name: "About", href: "/about" },
     { name: "FAQs", href: "/faqs" },
     { name: "Contact", href: "/contact" },
-  ]
-
-  // Sample notifications
-  const notifications = [
-    {
-      id: 1,
-      title: "New message received",
-      time: "2 min ago",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Project update available",
-      time: "1 hour ago",
-      read: false,
-    },
-    {
-      id: 3,
-      title: "Payment processed successfully",
-      time: "3 hours ago",
-      read: true,
-    },
-  ]
-
-  const unreadCount = notifications.filter((n) => !n.read).length
+  ];
 
   return (
     <>
       {/* Google-like search overlay */}
       {isSearchExpanded && !isMediumScreen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50" onClick={() => setIsSearchExpanded(false)}>
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+          onClick={() => setIsSearchExpanded(false)}
+        >
           <div
             ref={searchContainerRef}
             className="absolute top-0 left-0 w-full bg-white dark:bg-gray-900 p-4 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <button onClick={() => setIsSearchExpanded(false)} className="text-gray-500 dark:text-gray-400">
+              <button
+                onClick={() => setIsSearchExpanded(false)}
+                className="text-gray-500 dark:text-gray-400"
+              >
                 <X className="h-5 w-5" />
               </button>
               <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2">
@@ -158,14 +154,14 @@ const Navbar = () => {
         >
           <li className="p-1 md:py-0">
             <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+              className="relative after:bg-gray-100 after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               href="#"
             >
               Home
             </a>
           </li>
 
-          {/* Services Dropdown (now contains About, FAQs, Contact) */}
+          {/* Services Dropdown */}
           <li className="py-2 md:py-0 relative group">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -188,22 +184,27 @@ const Navbar = () => {
             </DropdownMenu>
           </li>
 
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="/register"
-            >
-              Register
-            </a>
-          </li>
-          <li className="py-2 md:py-0">
-            <a
-              className="relative after:bg-white after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
-              href="/login"
-            >
-              Login
-            </a>
-          </li>
+          {/* Conditionally render Register and Login links */}
+          {!loginStatus && (
+            <>
+              <li className="py-2 md:py-0">
+                <a
+                  className="relative after:bg-gray-100 after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+                  href="/register"
+                >
+                  Register
+                </a>
+              </li>
+              <li className="py-2 md:py-0">
+                <a
+                  className="relative after:bg-gray-100 after:absolute after:h-0.5 after:w-0 after:top-6 after:left-0 hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
+                  href="/login"
+                >
+                  Login
+                </a>
+              </li>
+            </>
+          )}
         </ul>
 
         {/* Right Side Icons */}
@@ -220,55 +221,7 @@ const Navbar = () => {
           )}
 
           {/* Mode Toggle */}
-          <ModeToggle className="" />
-
-          {/* Notification Icon with Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="relative p-2 text-white hover:bg-green-700 dark:hover:bg-green-600 rounded-full transition-colors">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs border-2 border-green-600">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-80 mt-2" align="end">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Notifications</span>
-                {unreadCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {unreadCount} new
-                  </Badge>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
-                    <div className="flex items-start justify-between w-full">
-                      <div className="flex-1">
-                        <p className={`text-sm ${!notification.read ? "font-semibold" : "font-normal"}`}>
-                          {notification.title}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                      </div>
-                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>}
-                    </div>
-                  </DropdownMenuItem>
-                ))
-              ) : (
-                <DropdownMenuItem disabled>
-                  <span className="text-gray-500">No notifications</span>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-center text-blue-600 hover:text-blue-700 cursor-pointer">
-                View all notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ModeToggle />
 
           {/* Profile Icon with Dropdown */}
           <DropdownMenu>
@@ -280,14 +233,18 @@ const Navbar = () => {
             <DropdownMenuContent className="w-48 mt-2" align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate(`/profile/${currentUser._id}`)}>
                 <UserCircle className="mr-2 h-4 w-4" />
                 View Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-red-600 hover:text-red-700">
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 hover:text-red-700"
+                onClick={handleLogout}
+                disabled={isPending}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {isPending ? "Logging out..." : "Logout"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -314,8 +271,15 @@ const Navbar = () => {
           </button>
         </div>
       </nav>
-    </>
-  )
-}
 
-export default Navbar
+      {/* Display logout error */}
+      {errorOccured && (
+        <Alert variant="destructive" className="fixed top-4 right-4 max-w-sm">
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+    </>
+  );
+};
+
+export default Navbar;
