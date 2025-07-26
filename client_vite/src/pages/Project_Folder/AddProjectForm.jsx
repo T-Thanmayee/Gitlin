@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useSelector, useDispatch } from "react-redux";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -244,7 +245,8 @@ const ProjectForm = ({ onSubmit, submitText, formData, setFormData, techInput, s
 }
 
 const AddProjectForm = () => {
-  const userId = "684ff0364ab94bd6ad1006ad" // Replace with actual user ID from authentication
+   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  const userId = currentUser._id // Replace with actual user ID from authentication
   const [projects, setProjects] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTech, setSelectedTech] = useState("")
@@ -268,7 +270,14 @@ const AddProjectForm = () => {
   useEffect(() => {
     const fetchUserProjects = async () => {
       try {
-        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/user/${userId}`)
+        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/user/${userId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+            }
+          }
+        )
         if (response.ok) {
           const data = await response.json()
           setProjects(data)
@@ -324,9 +333,13 @@ const AddProjectForm = () => {
     data.append("user", userId)
 
     try {
-      const response = await fetch("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects", {
+      const response = await fetch("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects",
+ {
         method: "POST",
         body: data,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+        }
       })
 
       if (response.ok) {

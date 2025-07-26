@@ -26,7 +26,11 @@ const ProjectSearchPage = () => {
       const response = await fetch(
         `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/search?query=${encodeURIComponent(
           query
-        )}`
+        )}`,{
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+        }}
       );
       const data = await response.json();
 

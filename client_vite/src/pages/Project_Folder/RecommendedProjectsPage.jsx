@@ -3,9 +3,10 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner"; // ✅ use sonner toast
 import CollabCard from "./CollabCard";
-
+import { useSelector, useDispatch } from "react-redux";
 const RecommendedProjectsPage = () => {
-  const userId  = "68513ba087655694a9350b1b"
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  const userId  = currentUser._id; // Get current user ID from Redux state
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,14 @@ const RecommendedProjectsPage = () => {
     const fetchRecommendedProjects = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/${userId}`);
+        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/recommend/${userId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+          }
+        }
+        );
         const data = await response.json();
         if (response.ok) {
           setProjects(data.projects);

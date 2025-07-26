@@ -4,13 +4,15 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, Github, Users, Code, Target, Clock, User } from "lucide-react"
 import { useLocation, useParams } from "react-router-dom"
 import axios from "axios"
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner"
 
 export function Card3() {
   const location = useLocation()
   const { id } = useParams()
   const project = location.state?.project
-  const currentUserId = "68513ba087655694a9350b1b";
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  const currentUserId = currentUser._id // Get current user ID from Redux state;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -22,7 +24,13 @@ export function Card3() {
 
   const handleJoinProject = async () => {
     try {
-      const res = await axios.put(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/${id}/${currentUserId}`)
+      const res = await axios.put(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/${id}/${currentUserId}
+        `,{},{
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+          }
+        })
       toast.success("Successfully joined the project!")
       console.log("Joined:", res.data)
     } catch (err) {
