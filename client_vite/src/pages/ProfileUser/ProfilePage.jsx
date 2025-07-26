@@ -11,7 +11,7 @@ export default function ProfilePage() {
   // const currentUserId = '68513ba087655694a9350b1b'; // Replace with auth system
   const baseUrl = 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
-  console.log("currentUser:", currentUser);
+  // console.log("currentUser:", currentUser);
   useEffect(() => {
     async function fetchData() {
       try {

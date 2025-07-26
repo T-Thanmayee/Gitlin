@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
 import '../aos-custom.css';
+import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from 'react';
 import Register from './pages/Register/Register';
 import Login from './pages/Login/Login';
@@ -29,8 +30,11 @@ import RegisterMentor from './pages/ProfileUser/registermentor';
 import { Card3 } from './pages/Project_Folder/Card3';
 import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 import MentorPage from './pages/Mentor/MentorPage';
-const userId="68513b0287655694a9350b08"
+ 
+
 function App() {
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
+  const userId=currentUser._id
   useEffect(() => {
     AOS.init({
       duration: 1000,

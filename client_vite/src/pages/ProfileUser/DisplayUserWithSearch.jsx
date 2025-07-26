@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Search } from "lucide-react";
-
+import { useSelector, useDispatch } from "react-redux";
 export default function DisplayUserWithSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -19,8 +19,9 @@ export default function DisplayUserWithSearch() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState([]); // Store current user's following list
-  const currentUserId = "68513b0287655694a9350b08"; // Replace with auth system
+  const [following, setFollowing] = useState([]); 
+   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);// Store current user's following list
+  const currentUserId = currentUser._id; // Replace with auth system
 
   useEffect(() => {
     async function fetchCurrentUserFollowing() {
@@ -29,7 +30,9 @@ export default function DisplayUserWithSearch() {
           `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/${currentUserId}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+              'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+             },
             credentials: "include",
           }
         );
@@ -62,7 +65,9 @@ export default function DisplayUserWithSearch() {
 
         const response = await fetch(endpoint, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           },
           credentials: "include",
         });
         const data = await response.json();
@@ -93,7 +98,9 @@ export default function DisplayUserWithSearch() {
         `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/post/${targetUserId}/follow`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed
+           },
           credentials: "include",
           body: JSON.stringify({ userId: currentUserId }),
         }
