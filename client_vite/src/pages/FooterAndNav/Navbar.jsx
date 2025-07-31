@@ -11,10 +11,7 @@ import {
   LogOut,
   UserCircle,
   Home,
-  FolderPlus,
-  BookOpen,
   MessageCircle,
-  Users,
   GraduationCap,
   FileText,
   HelpCircle,
@@ -93,11 +90,10 @@ const Navbar = () => {
       href: "/",
       icon: Home,
       isActive: location.pathname === "/",
-      iconOnly: true, // Add this property
+      iconOnly: true,
     },
     {
       name: "Projects",
-      icon: FolderPlus,
       isDropdown: true,
       items: [
         { name: "Add Project", href: "/project/addproject", icon: PlusCircle },
@@ -106,7 +102,6 @@ const Navbar = () => {
     },
     {
       name: "Posts",
-      icon: FileText,
       isDropdown: true,
       items: [
         { name: "Create Post", href: "/post/createpost", icon: PlusCircle },
@@ -115,19 +110,12 @@ const Navbar = () => {
     },
     {
       name: "Community",
-      icon: Users,
       isDropdown: true,
       items: [
         { name: "Find Users", href: "/users/search", icon: UserSearch },
         { name: "Mentors", href: "/mentors", icon: GraduationCap },
         { name: "Chat", href: "/chat", icon: MessageCircle },
       ],
-    },
-    {
-      name: "Learning",
-      href: "/tutorials",
-      icon: BookOpen,
-      isActive: location.pathname === "/tutorials",
     },
     {
       name: "Help",
@@ -150,7 +138,7 @@ const Navbar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={baseClasses}>
-              <item.icon className="h-4 w-4" />
+              {item.icon && <item.icon className="h-4 w-4" />}
               {item.name}
               <ChevronDown className="h-3 w-3 ml-1" />
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
@@ -158,7 +146,7 @@ const Navbar = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48 mt-2">
             <DropdownMenuLabel className="flex items-center gap-2">
-              <item.icon className="h-4 w-4" />
+              {item.icon && <item.icon className="h-4 w-4" />}
               {item.name}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -177,7 +165,7 @@ const Navbar = () => {
 
     return (
       <Link to={item.href} className={baseClasses} title={item.iconOnly ? item.name : undefined}>
-        <item.icon className="h-4 w-4" />
+        {item.icon && <item.icon className="h-4 w-4" />}
         {!item.iconOnly && item.name}
         <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
       </Link>
