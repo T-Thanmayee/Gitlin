@@ -62,4 +62,59 @@ router.post('/user', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+router.post('/user-engagement', async (req, res) => {
+  try {
+    const user = req.body.user;
+    const endDate = new Date(); // Today
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6); // Last 7 days
+
+    // Aggregate posts by day
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          user: user._id,
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          likes: { $sum: { $size: '$likes' } },
+          comments: { $sum: { $size: '$comments' } },
+          shares: { $sum: '$shares' },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by date ascending
+      },
+    ]);
+
+    // Generate array of last 7 days
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(endDate);
+      date.setDate(endDate.getDate() - i);
+      days.push(date);
+    }
+
+    // Map posts to days, filling in zeros for days with no data
+    const data = days.map((date) => {
+      const dateStr = date.toISOString().split('T')[0];
+      const post = posts.find((p) => p._id === dateStr) || { likes: 0, comments: 0, shares: 0 };
+      return {
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        likes: post.likes,
+        comments: post.comments,
+        shares: post.shares,
+      };
+    });
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 module.exports = router;

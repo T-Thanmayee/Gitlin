@@ -31,7 +31,7 @@ import { Card3 } from './pages/Project_Folder/Card3';
 import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 import MentorPage from './pages/Mentor/MentorPage';
 import {StatsCards} from './pages/ProfileUser/StatsCards';
-
+import {EngagementChart} from './pages/Post/EngagementChart';
 function App() {
   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
   const userId=currentUser._id
@@ -151,6 +151,9 @@ function App() {
         {
           path:'stats',
           element: <StatsCards />
+        },{
+          path:'engagement',
+          element: <EngagementChart />
         }
       ]
     }
