@@ -77,13 +77,13 @@ const postInfo = require('./API/postInfoApi');
 const tutorials = require('./API/tutorials');
 const mentorsRouter = require('./API/Mentor'); // MentorChat module
 const chatroom = require('./API/Chatroom'); // LinkedInChat module
-
+const analytics = require('./API/Analytics'); // Analytics module
 app.use('/user',usersInfo);
 app.use('/projects', authMiddleware,projectInfo);
 app.use('/post',authMiddleware, postInfo);
 app.use('/mentors', mentorsRouter.router); // Use mentorsRouter.router
 app.use('/chat', authMiddleware,chatroom(io)); // Pass io to chatroom
-
+app.use('/stats',  analytics); // Analytics route
 // Initialize Socket.IO for mentor routes
 mentorsRouter.setupSocket(io);
 

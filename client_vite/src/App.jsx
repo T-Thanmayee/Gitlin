@@ -30,7 +30,7 @@ import RegisterMentor from './pages/ProfileUser/registermentor';
 import { Card3 } from './pages/Project_Folder/Card3';
 import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 import MentorPage from './pages/Mentor/MentorPage';
- 
+import {StatsCards} from './pages/ProfileUser/StatsCards';
 
 function App() {
   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
@@ -147,6 +147,10 @@ function App() {
         {
           path:'mentor/:mentorId',
           element: <MentorPage />
+        },
+        {
+          path:'stats',
+          element: <StatsCards />
         }
       ]
     }

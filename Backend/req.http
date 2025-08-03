@@ -155,4 +155,48 @@ Content-Type: application/json
 
 ###
 
-get https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors/6877d6f580b7beac37c9fb99
+post https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/stats/user
+Content-Type: application/json
+
+{
+"user": {
+      "_id": "684ff0364ab94bd6ad1006ad",
+      "username": "thanmayee",
+      "birthday": "2025-05-28T00:00:00.000Z",
+      "gender": "Female",
+      "email": "thanmayee.tadepalli@gmail.com",
+      "phoneNumber": "8121875375",
+      "github": "sdfghjk",
+      "avatar": "/placeholder-user.jpg",
+      "verified": false,
+      "following": [
+        "684ff902561fbc141c2f5137"
+      ],
+      "createdAt": "2025-06-16T10:21:42.976Z",
+      "updatedAt": "2025-06-17T11:26:41.120Z",
+      "__v": 2,
+      "personal": {
+        "name": "Unknown Userfgbhj",
+        "title": " nm",
+        "company": " fghnj",
+        "location": "cfvgbhnj",
+        "email": "unknown@example.com",
+        "phone": "",
+        "website": "gvbhnjm",
+        "avatar": "/placeholder.svg?height=150&width=150",
+        "coverImage": "/placeholder.svg?height=300&width=1200",
+        "bio": "vgbhnj",
+        "joinDate": "",
+        "_id": "685150f14d7fbaa543e52088"
+      },
+      "education": [],
+      "experience": [],
+      "skills": []
+    },
+    "posts": [],
+    "projects": []
+  
+}
+
+###
+get https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/user/684ff0364ab94bd6ad1006ad
