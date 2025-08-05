@@ -32,6 +32,8 @@ import LinkedInChatPage from './pages/ChatRoom/LinkedInChatPage';
 import MentorPage from './pages/Mentor/MentorPage';
 import {StatsCards} from './pages/ProfileUser/StatsCards';
 import {EngagementChart} from './pages/Post/EngagementChart';
+import { ProjectCategoriesChart } from './pages/Project_Folder/ProjectCategoriesChart';
+import { TagCloud } from './pages/Project_Folder/TagCloud';
 function App() {
   const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth);
   const userId=currentUser._id
@@ -154,6 +156,14 @@ function App() {
         },{
           path:'engagement',
           element: <EngagementChart />
+        },
+        {
+          path: 'project-categories',
+          element: <ProjectCategoriesChart />
+        },
+        {
+          path: 'tag-cloud',
+          element: <TagCloud />
         }
       ]
     }
