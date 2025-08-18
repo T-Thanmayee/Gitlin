@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { toast } from "sonner"; // ✅ Sonner import
+import { toast } from "sonner"; // 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import CollabCard from "./CollabCard"; // Assuming CollabCard is in the same directory
+import CollabCard from "./CollabCard"; 
 
 const UserProjectsPage = () => {
   const { userId } = useParams();
@@ -15,7 +15,7 @@ const UserProjectsPage = () => {
     const fetchUserProjects = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/projects/user/${userId}`);
+        const response = await fetch(`https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/projects/user/${userId}`);
         const data = await response.json();
         if (response.ok) {
           setProjects(data.projects);

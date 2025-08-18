@@ -318,13 +318,7 @@ const Navbar = () => {
                   >
                     Register
                   </Link>
-                  <Link
-                    to="/registermentor"
-                    className="px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors font-medium text-sm flex items-center gap-1"
-                  >
-                    <GraduationCap className="h-3 w-3" />
-                    Mentor
-                  </Link>
+                
                 </div>
               )}
 
@@ -378,13 +372,7 @@ const Navbar = () => {
                     <UserCircle className="h-4 w-4" />
                     Register
                   </Link>
-                  <Link
-                    to="/registermentor"
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors font-medium"
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    Become a Mentor
-                  </Link>
+                  
                 </div>
               )}
             </div>
