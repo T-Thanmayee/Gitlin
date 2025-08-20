@@ -6,7 +6,7 @@ import FeatureCard from './FeatureCard'
 import Testimony from './Testimony';
 import SlideInPage from './SlideInPage';
 import { FileDelete } from '../DeleteDialog/FileDelete';
-import {ChatWidget} from './ChatWidget';
+import { FloatingChatToggle } from './FloatingChatToggle';
 import Slide from '../../components/ui/Slide';
 import SlideNext from '../../components/ui/SlideNext';
 import RotateComponent from './RotatedComponent';
@@ -18,12 +18,12 @@ const App = () => {
   return (
     <div className=''>
     <HomeCarousel />
-  <ChatWidget />
+  
     <FeatureCard/>
     <ProfessionalCard/>
     <MentorDisplayCard/>
     <DetailedProfile/>
-    
+    <FloatingChatToggle/>
    
    
   
