@@ -44,7 +44,12 @@ export default function LinkedInChatPage({ userId }) {
         setLoading(true);
         const response = await axios.get(
           `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/users/${userId}/followers`,
-          { withCredentials: true }
+            {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed,
+    },
+  }
         );
         console.log("Fetched connections:", response.data);
         setConnections(response.data);
@@ -193,7 +198,12 @@ export default function LinkedInChatPage({ userId }) {
           setLoading(true);
           const response = await axios.get(
             `https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/chat/messages/${userId}/${selectedConnection.id}`,
-            { withCredentials: true }
+              {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('Token')}` // Include token if needed,
+    },
+  }
           );
           console.log("Fetched messages:", response.data);
           setMessages(response.data);

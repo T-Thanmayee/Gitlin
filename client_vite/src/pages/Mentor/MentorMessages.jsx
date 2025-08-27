@@ -24,7 +24,6 @@ export default function MentorMessages() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize Socket.IO client with authentication
   const socket = io(`${API_URL}/mentor-chat`, {
     auth: {
       token: sessionStorage.getItem('Token'),
@@ -32,7 +31,6 @@ export default function MentorMessages() {
     withCredentials: true,
   });
 
-  // Fetch users who messaged the mentor
   useEffect(() => {
     if (!currentUser._id) return;
 
@@ -40,7 +38,7 @@ export default function MentorMessages() {
       setLoading(true);
       try {
         const response = await axios.get(
-          `${API_URL}/mentors/${currentUser._id}/messages/users`,
+          `${API_URL}/mentors/mentormessages/${currentUser._id}/users`,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem('Token')}`,
@@ -51,7 +49,7 @@ export default function MentorMessages() {
         setUsers(response.data);
         setError(null);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching users:", error.response?.data || error.message);
         setError("Failed to load users. Please try again.");
         toast.error("Failed to load users.");
       } finally {
@@ -63,6 +61,10 @@ export default function MentorMessages() {
 
     socket.emit("joinMentor", currentUser._id, (response) => {
       console.log("Joined mentor room:", response || "No response");
+      if (response?.status === "error") {
+        setError(response.error);
+        toast.error(response.error);
+      }
     });
 
     socket.on("receiveMessage", (message) => {
@@ -70,8 +72,7 @@ export default function MentorMessages() {
       if (
         selectedUser &&
         (message.senderId.toString() === selectedUser.userId.toString() ||
-          message.receiverId.toString() === selectedUser.userId.toString()) &&
-        (message.senderId.toString() === currentUser._id || message.receiverId.toString() === currentUser._id)
+          message.receiverId.toString() === selectedUser.userId.toString())
       ) {
         dispatch(addMessage({
           id: message._id,
@@ -100,7 +101,6 @@ export default function MentorMessages() {
           ];
         });
       }
-      // Update user list with latest message
       setUsers((prev) =>
         prev.map((user) =>
           user.userId.toString() === message.senderId.toString() ||
@@ -129,18 +129,17 @@ export default function MentorMessages() {
     };
   }, [selectedUser, currentUser._id, dispatch]);
 
-  // Fetch chat history when a user is selected
   useEffect(() => {
     if (selectedUser && currentUser._id) {
-      dispatch(fetchChatHistory({ userId: selectedUser.userId, mentorShortName: selectedUser.mentorShortName }))
+      dispatch(fetchChatHistory({ userId: selectedUser.userId, mentorUserId: currentUser._id }))
         .unwrap()
         .then((data) => {
           setMessages(data.map((msg) => ({
-            id: msg._id,
+            id: msg.id,
             senderId: msg.senderId,
             senderName: msg.senderId === currentUser._id ? "You" : selectedUser.username,
-            message: msg.content,
-            timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+            message: msg.message,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             }),
@@ -154,8 +153,12 @@ export default function MentorMessages() {
           toast.error("Failed to load chat history.");
         });
 
-      socket.emit("joinChat", { userId: selectedUser.userId, mentorId: currentUser._id }, (response) => {
+      socket.emit("joinChat", { userId: selectedUser.userId, mentorUserId: currentUser._id }, (response) => {
         console.log("Joined chat room:", response || "No response");
+        if (response?.status === "error") {
+          setError(response.error);
+          toast.error(response.error);
+        }
       });
     }
   }, [selectedUser, currentUser._id, dispatch]);
@@ -218,7 +221,7 @@ export default function MentorMessages() {
         },
         (response) => {
           console.log("Send message response:", response);
-          if (response.status === "error") {
+          if (response?.status === "error") {
             console.error("Send message failed:", response.error);
             setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
             dispatch(removeMessage(tempId));
@@ -246,7 +249,6 @@ export default function MentorMessages() {
         style={{ backgroundImage: "linear-gradient(to bottom right, #e0f7fa, #f0f4f8)" }}
       >
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-          {/* Chat Header */}
           <div className="bg-white shadow-md border-b border-gray-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={handleBackToList} className="hover:bg-gray-100">
@@ -262,8 +264,6 @@ export default function MentorMessages() {
               </div>
             </div>
           </div>
-
-          {/* Chat Messages */}
           <div className="flex-1 p-6 overflow-y-auto bg-white/80 backdrop-blur-md rounded-lg shadow-inner">
             {isPending && <p className="text-center text-gray-500 animate-pulse">Loading messages...</p>}
             {errorOccured && <p className="text-center text-red-500">{errorMessage || error}</p>}
@@ -271,9 +271,7 @@ export default function MentorMessages() {
               {messages.map((msg) => (
                 <div
                   key={msg.id || msg.tempId}
-                  className={`flex ${
-                    msg.senderId.toString() === currentUser._id ? "justify-end" : "justify-start"
-                  } animate-fade-in`}
+                  className={`flex ${msg.senderId.toString() === currentUser._id ? "justify-end" : "justify-start"} animate-fade-in`}
                 >
                   <div
                     className={`rounded-lg p-3 max-w-[70%] ${
@@ -295,8 +293,6 @@ export default function MentorMessages() {
               ))}
             </div>
           </div>
-
-          {/* Message Input */}
           <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
             <div className="flex items-center gap-2">
               <Input
@@ -333,13 +329,11 @@ export default function MentorMessages() {
           </h1>
           <p className="text-gray-600 text-lg">View and manage your conversations</p>
         </div>
-
         {loading && <p className="text-center text-gray-500 animate-pulse">Loading users...</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
         {!loading && !error && users.length === 0 && (
           <p className="text-gray-500 text-center py-12">No messages yet.</p>
         )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {users.map((user) => (
             <Card

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,6 @@ import {
   Globe,
   Calendar,
   GraduationCap,
-  Users,
   FileText,
   MessageSquare,
   Share2,
@@ -28,18 +27,19 @@ import {
   VolumeX,
   ThumbsUp,
   Send,
-  MoreHorizontal,
   MessageCircle,
 } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import CollabCard from "../Project_Folder/CollabCard"; // Adjust the import path as necessary
+import CollabCard from "../Project_Folder/CollabCard";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
 
 export function DetailedProfile({ data, userId, currentUserId }) {
   const [activeTab, setActiveTab] = useState("about");
+  const [isMentor, setIsMentor] = useState(false);
   const navigate = useNavigate();
-  // State for post interactions
   const [following, setFollowing] = useState([]);
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [savedPosts, setSavedPosts] = useState(new Set());
@@ -48,7 +48,6 @@ export function DetailedProfile({ data, userId, currentUserId }) {
   const [playingVideo, setPlayingVideo] = useState(null);
   const [mutedVideos, setMutedVideos] = useState(new Set());
 
-  // Fallback for missing data
   const profileData = {
     personal: data?.personal || {},
     education: data?.education || [],
@@ -58,7 +57,21 @@ export function DetailedProfile({ data, userId, currentUserId }) {
     projects: data?.projects || [],
   };
 
-  // Interaction handlers
+  useEffect(() => {
+    if (currentUserId === userId) {
+      axios
+        .get(`${API_URL}/is-mentor/${userId}`, {
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('Token')}` },
+        })
+        .then((response) => {
+          setIsMentor(response.data.isMentor || false);
+        })
+        .catch((error) => {
+          console.error("Error checking mentor status:", error);
+        });
+    }
+  }, [userId, currentUserId]);
+
   const handleFollow = (userId) => {
     setFollowing((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
@@ -108,9 +121,12 @@ export function DetailedProfile({ data, userId, currentUserId }) {
     navigate('/registermentor');
   };
 
+  const handleViewMentorMessages = () => {
+    navigate('/mentormessages');
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
-      {/* Cover Image and Profile Header */}
       <div className="relative mb-6 overflow-hidden rounded-xl">
         <div
           className="h-64 w-full bg-cover bg-center sm:h-80"
@@ -124,10 +140,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
         <div className="absolute bottom-0 left-0 w-full p-6">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <Avatar className="h-24 w-24 border-4 border-background sm:h-32 sm:w-32">
-              <AvatarImage
-                src={profileData.personal.avatar || '/placeholder.svg'}
-                alt={profileData.personal.name || ''}
-              />
+              <AvatarImage src={profileData.personal.avatar || '/placeholder.svg'} alt={profileData.personal.name || ''} />
               <AvatarFallback>{profileData.personal.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -162,9 +175,17 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                   Message
                 </Button>
               )}
-              <Button variant="outline" onClick={handleRegisterAsMentor}>
-                Register as Mentor
-              </Button>
+              {currentUserId === userId && (
+                !isMentor ? (
+                  <Button variant="outline" onClick={handleRegisterAsMentor}>
+                    Register as Mentor
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={handleViewMentorMessages}>
+                    View Mentor Messages
+                  </Button>
+                )
+              )}
               <Button variant="ghost" size="icon">
                 <Share2 className="h-4 w-4" />
               </Button>
@@ -173,11 +194,8 @@ export function DetailedProfile({ data, userId, currentUserId }) {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Sidebar */}
         <div className="space-y-6 md:col-span-1">
-          {/* About Card */}
           <Card>
             <CardContent className="p-6">
               <h2 className="mb-4 text-xl font-semibold">About</h2>
@@ -198,10 +216,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                 </div>
                 <div className="flex items-center">
                   <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={`mailto:${profileData.personal.email || ''}`}
-                    className="text-primary hover:underline"
-                  >
+                  <a href={`mailto:${profileData.personal.email || ''}`} className="text-primary hover:underline">
                     {profileData.personal.email || 'No Email'}
                   </a>
                 </div>
@@ -212,11 +227,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                 <div className="flex items-center">
                   <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
                   <a
-                    href={
-                      profileData.personal.website
-                        ? `https://${profileData.personal.website}`
-                        : '#'
-                    }
+                    href={profileData.personal.website ? `https://${profileData.personal.website}` : '#'}
                     className="text-primary hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -228,7 +239,6 @@ export function DetailedProfile({ data, userId, currentUserId }) {
             </CardContent>
           </Card>
 
-          {/* Skills Card */}
           <Card>
             <CardContent className="p-6">
               <h2 className="mb-4 text-xl font-semibold">Skills</h2>
@@ -246,31 +256,21 @@ export function DetailedProfile({ data, userId, currentUserId }) {
             </CardContent>
           </Card>
 
-          {/* Education Card */}
           <Card>
             <CardContent className="p-6">
               <h2 className="mb-4 text-xl font-semibold">Education</h2>
               <div className="space-y-4">
                 {profileData.education.length > 0 ? (
                   profileData.education.map((edu, index) => (
-                    <div
-                      key={index}
-                      className="border-l-2 border-muted-foreground/20 pl-4"
-                    >
+                    <div key={index} className="border-l-2 border-muted-foreground/20 pl-4">
                       <div className="flex items-center">
                         <GraduationCap className="mr-2 h-5 w-5 text-primary" />
                         <h3 className="font-medium">{edu.institution || ''}</h3>
                       </div>
-                      <p className="text-sm">
-                        {edu.degree || ''} in {edu.field || ''}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {edu.startDate || ''} - {edu.endDate || ''}
-                      </p>
+                      <p className="text-sm">{edu.degree || ''} in {edu.field || ''}</p>
+                      <p className="text-xs text-muted-foreground">{edu.startDate || ''} - {edu.endDate || ''}</p>
                       {edu.description && (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {edu.description}
-                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">{edu.description}</p>
                       )}
                     </div>
                   ))
@@ -282,7 +282,6 @@ export function DetailedProfile({ data, userId, currentUserId }) {
           </Card>
         </div>
 
-        {/* Main Content Area */}
         <div className="md:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-3">
@@ -300,16 +299,12 @@ export function DetailedProfile({ data, userId, currentUserId }) {
               </TabsTrigger>
             </TabsList>
 
-            {/* Experience Tab */}
             <TabsContent value="about" className="space-y-6">
               <h2 className="text-2xl font-semibold">Work Experience</h2>
               <div className="space-y-6">
                 {profileData.experience.length > 0 ? (
                   profileData.experience.map((exp, index) => (
-                    <div
-                      key={index}
-                      className="border-l-2 border-primary/30 pl-6"
-                    >
+                    <div key={index} className="border-l-2 border-primary/30 pl-6">
                       <div className="relative">
                         <div className="absolute -left-[30px] h-5 w-5 rounded-full border-2 border-primary bg-background"></div>
                         <h3 className="text-lg font-medium">{exp.title || ''}</h3>
@@ -320,9 +315,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                           <MapPin className="mr-1 h-4 w-4" />
                           <span>{exp.location || ''}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {exp.startDate || ''} - {exp.endDate || ''}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{exp.startDate || ''} - {exp.endDate || ''}</p>
                         <p className="mt-2">{exp.description || ''}</p>
                       </div>
                     </div>
@@ -333,13 +326,10 @@ export function DetailedProfile({ data, userId, currentUserId }) {
               </div>
             </TabsContent>
 
-            {/* Posts Tab */}
             <TabsContent value="posts" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold">Recent Posts</h2>
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
+                <Button variant="outline" size="sm">View All</Button>
               </div>
               <div className="max-w-2xl mx-auto p-4 space-y-6">
                 {profileData.posts.length > 0 ? (
@@ -353,25 +343,18 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                               <Avatar className="w-12 h-12">
                                 <AvatarImage src={post.user?.avatar || "/placeholder.svg"} />
                                 <AvatarFallback>
-                                  {post.user?.name
-                                    ?.split(" ")
-                                    .map((n) => n[0])
-                                    .join("") || "U"}
+                                  {post.user?.name?.split(" ").map((n) => n[0]).join("") || "U"}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h3 className="font-semibold">{post.user?.name || "Unknown User"}</h3>
                                   {post.user?.verified && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      ✓ Verified
-                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">✓ Verified</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                  {post.isStatic
-                                    ? post.user?.username?.replace(/_/g, " ") || "Unknown"
-                                    : post.user?.username || "Unknown"}
+                                  {post.isStatic ? post.user?.username?.replace(/_/g, " ") || "Unknown" : post.user?.username || "Unknown"}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {post.timestamp || new Date().toLocaleDateString()}
@@ -383,22 +366,15 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                             </div>
                           </div>
                         </CardHeader>
-
                         <CardContent className="pb-3">
-                          {post.content && (
-                            <p className="text-sm leading-relaxed mb-3">{post.content}</p>
-                          )}
-
+                          {post.content && <p className="text-sm leading-relaxed mb-3">{post.content}</p>}
                           {post.tags?.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-3">
                               {post.tags.map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
-                                  #{tag}
-                                </Badge>
+                                <Badge key={tag} variant="outline" className="text-xs">#{tag}</Badge>
                               ))}
                             </div>
                           )}
-
                           {post.media && (
                             <div className="relative rounded-lg overflow-hidden bg-muted">
                               {post.type === "video" ? (
@@ -414,17 +390,9 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                     <Button
                                       size="icon"
                                       className="h-16 w-16 rounded-full bg-white/90 hover:bg-white text-black"
-                                      onClick={() =>
-                                        setPlayingVideo(
-                                          playingVideo === post.id ? null : post.id
-                                        )
-                                      }
+                                      onClick={() => setPlayingVideo(playingVideo === post.id ? null : post.id)}
                                     >
-                                      {playingVideo === post.id ? (
-                                        <Pause className="h-8 w-8" />
-                                      ) : (
-                                        <Play className="h-8 w-8 ml-1" />
-                                      )}
+                                      {playingVideo === post.id ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
                                     </Button>
                                   </div>
                                   <div className="absolute bottom-4 right-4">
@@ -442,11 +410,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                         setMutedVideos(newMuted);
                                       }}
                                     >
-                                      {mutedVideos.has(post.id) ? (
-                                        <VolumeX className="h-4 w-4" />
-                                      ) : (
-                                        <Volume2 className="h-4 w-4" />
-                                      )}
+                                      {mutedVideos.has(post.id) ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                                     </Button>
                                   </div>
                                 </div>
@@ -471,7 +435,6 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                             </div>
                           )}
                         </CardContent>
-
                         <CardFooter className="pt-0">
                           <div className="w-full space-y-3">
                             <div className="flex items-center justify-between">
@@ -482,9 +445,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                   className={`gap-3 ${likedPosts.has(post.id) ? "text-red-500" : ""}`}
                                   onClick={() => toggleLike(post.id)}
                                 >
-                                  <Heart
-                                    className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-current" : ""}`}
-                                  />
+                                  <Heart className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-current" : ""}`} />
                                   {post.likes || 0}
                                 </Button>
                                 <Button
@@ -512,12 +473,9 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                 className={savedPosts.has(post.id) ? "text-blue-500" : ""}
                                 onClick={() => toggleSave(post.id)}
                               >
-                                <Bookmark
-                                  className={`h-4 w-4 ${savedPosts.has(post.id) ? "fill-current" : ""}`}
-                                />
+                                <Bookmark className={`h-4 w-4 ${savedPosts.has(post.id) ? "fill-current" : ""}`} />
                               </Button>
                             </div>
-
                             {showComments.has(post.id) && (
                               <>
                                 <Separator />
@@ -532,65 +490,36 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                         placeholder="Write a comment..."
                                         className="h-8"
                                         value={commentText[post.id] || ""}
-                                        onChange={(e) =>
-                                          setCommentText({
-                                            ...commentText,
-                                            [post.id]: e.target.value,
-                                          })
-                                        }
+                                        onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
                                       />
                                     </div>
-                                    <Button
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => handleCommentSubmit(post.id)}
-                                    >
+                                    <Button size="icon" className="h-8 w-8" onClick={() => handleCommentSubmit(post.id)}>
                                       <Send className="h-4 w-4" />
                                     </Button>
                                   </div>
-
                                   {post.commentsData?.length > 0 ? (
                                     <div className="space-y-3 pl-11">
                                       {post.commentsData.map((comment) => (
                                         <div key={comment.id || comment._id} className="flex gap-3">
                                           <Avatar className="w-6 h-6">
-                                            <AvatarImage
-                                              src={comment.user?.avatar || "/placeholder-user.jpg"}
-                                            />
+                                            <AvatarImage src={comment.user?.avatar || "/placeholder-user.jpg"} />
                                             <AvatarFallback>
-                                              {comment.user?.name
-                                                ?.split(" ")
-                                                .map((n) => n[0])
-                                                .join("") || "UN"}
+                                              {comment.user?.name?.split(" ").map((n) => n[0]).join("") || "UN"}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div className="flex-1">
                                             <div className="bg-muted rounded-lg p-2">
-                                              <p className="text-sm font-medium">
-                                                {comment.user?.name || "Unknown User"}
-                                              </p>
+                                              <p className="text-sm font-medium">{comment.user?.name || "Unknown User"}</p>
                                               <p className="text-sm">{comment.text || ""}</p>
                                             </div>
                                             <div className="flex items-center gap-4 mt-1">
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 text-xs"
-                                              >
+                                              <Button variant="ghost" size="sm" className="h-6 text-xs">
                                                 <ThumbsUp className="h-3 w-3 mr-1" />
                                                 {comment.likes?.length || 0}
                                               </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 text-xs"
-                                              >
-                                                Reply
-                                              </Button>
+                                              <Button variant="ghost" size="sm" className="h-6 text-xs">Reply</Button>
                                               <span className="text-xs text-muted-foreground">
-                                                {comment.createdAt
-                                                  ? new Date(comment.createdAt).toLocaleTimeString()
-                                                  : "Unknown time"}
+                                                {comment.createdAt ? new Date(comment.createdAt).toLocaleTimeString() : "Unknown time"}
                                               </span>
                                             </div>
                                           </div>
@@ -598,9 +527,7 @@ export function DetailedProfile({ data, userId, currentUserId }) {
                                       ))}
                                     </div>
                                   ) : (
-                                    <p className="text-sm text-muted-foreground pl-11">
-                                      No comments yet.
-                                    </p>
+                                    <p className="text-sm text-muted-foreground pl-11">No comments yet.</p>
                                   )}
                                 </div>
                               </>
@@ -616,13 +543,10 @@ export function DetailedProfile({ data, userId, currentUserId }) {
               </div>
             </TabsContent>
 
-            {/* Projects Tab */}
             <TabsContent value="projects" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold">Projects</h2>
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
+                <Button variant="outline" size="sm">View All</Button>
               </div>
               <div className="max-w-2xl mx-auto p-4 space-y-6">
                 {profileData.projects.length > 0 ? (

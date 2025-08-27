@@ -17,7 +17,7 @@ export const loginUser = createAsyncThunk(
         },
       });
       if (res.data.message === 'login successful') {
-        localStorage.setItem('Token', res.data.Token); // Changed to localStorage
+        localStorage.setItem('Token', res.data.Token);
         localStorage.setItem('currentUser', JSON.stringify(res.data.data));
         localStorage.setItem('loginStatus', 'true');
         return res.data.data;
@@ -35,16 +35,16 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Async thunk for user logout (client-side only)
+// Async thunk for user logout
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { dispatch, rejectWithValue }) => {
     console.log('Logging out user...');
-    localStorage.removeItem('Token'); // Changed to localStorage
+    localStorage.removeItem('Token');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('loginStatus');
     try {
-      dispatch(resetState()); // Clear client-side state
+      dispatch(resetState());
       return { message: 'Logout successful' };
     } catch (err) {
       return rejectWithValue('Logout failed: ' + err.message);
@@ -75,7 +75,7 @@ export const fetchMentors = createAsyncThunk(
       const res = await axios.get(`${API_URL}/mentors`, {
         params,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('Token')}`, // Changed to localStorage
+          Authorization: `Bearer ${localStorage.getItem('Token')}`,
         },
       });
       return res.data;
@@ -88,13 +88,13 @@ export const fetchMentors = createAsyncThunk(
 // Async thunk for fetching chat history
 export const fetchChatHistory = createAsyncThunk(
   'auth/fetchChatHistory',
-  async ({ userId, mentorShortName }, { rejectWithValue }) => {
+  async ({ userId, mentorUserId }, { rejectWithValue }) => {
     try {
       const res = await axios.get(
-        `${API_URL}/mentors/${mentorShortName}/chat?userId=${userId}`,
+        `${API_URL}/mentors/${mentorUserId}/chat?userId=${userId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('Token')}`, // Changed to localStorage
+            Authorization: `Bearer ${localStorage.getItem('Token')}`,
           },
         }
       );
@@ -129,7 +129,7 @@ const authSlice = createSlice({
       state.errorMessage = '';
       localStorage.removeItem('currentUser');
       localStorage.removeItem('loginStatus');
-      localStorage.removeItem('Token'); // Changed to localStorage
+      localStorage.removeItem('Token');
     },
     setSelectedMentor: (state, action) => {
       state.selectedMentor = action.payload;
@@ -173,7 +173,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login User
       .addCase(loginUser.pending, (state) => {
         state.isPending = true;
         state.errorOccured = false;
@@ -193,7 +192,6 @@ const authSlice = createSlice({
         state.errorMessage = action.payload;
         state.currentUser = {};
       })
-      // Logout User
       .addCase(logoutUser.pending, (state) => {
         state.isPending = true;
         state.errorOccured = false;
@@ -201,6 +199,11 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.isPending = false;
+        state.loginStatus = false;
+        state.currentUser = {};
+        state.mentors = [];
+        state.selectedMentor = null;
+        state.messages = [];
         state.errorOccured = false;
         state.errorMessage = '';
       })
@@ -209,7 +212,6 @@ const authSlice = createSlice({
         state.errorOccured = true;
         state.errorMessage = action.payload;
       })
-      // Fetch Mentors
       .addCase(fetchMentors.pending, (state) => {
         state.isPending = true;
         state.errorOccured = false;
@@ -226,7 +228,6 @@ const authSlice = createSlice({
         state.errorOccured = true;
         state.errorMessage = action.payload;
       })
-      // Fetch Chat History
       .addCase(fetchChatHistory.pending, (state) => {
         state.isPending = true;
         state.errorOccured = false;
@@ -235,13 +236,13 @@ const authSlice = createSlice({
       .addCase(fetchChatHistory.fulfilled, (state, action) => {
         state.isPending = false;
         state.messages = action.payload.map((msg) => ({
-          id: msg._id.toString(),
+          id: msg.id || msg._id.toString(),
           senderId: msg.senderId,
           receiverId: msg.receiverId,
-          content: msg.content,
-          createdAt: new Date(msg.createdAt),
-          isOwn: msg.senderId === state.currentUser._id,
-          senderName: msg.senderId === state.currentUser._id ? 'You' : state.selectedMentor?.name || 'Mentor',
+          content: msg.message || msg.content,
+          createdAt: new Date(msg.timestamp || msg.createdAt),
+          isOwn: msg.isOwn || msg.senderId === state.currentUser._id,
+          senderName: msg.senderName || (msg.senderId === state.currentUser._id ? 'You' : state.selectedMentor?.name || 'Mentor'),
         }));
         state.errorOccured = false;
         state.errorMessage = '';

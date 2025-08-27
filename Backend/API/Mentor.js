@@ -13,41 +13,57 @@ const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-router.get('/', asyncHandler(async (req, res) => {
-  const { isOnline, skills, rating, price } = req.query;
-  const query = {};
+// Middleware to convert userId to mentorId
+const mentorIdMiddleware = asyncHandler(async (req, res, next) => {
+  console.log('mentorIdMiddleware - req.path:', req.path, 'req.params:', req.params, 'req.body:', req.body, 'req.query:', req.query);
+  if (req.path.startsWith('/mentors/') || req.path.startsWith('/mentormessages/')) {
+    let userId = req.params.userId || req.body.userId || req.query.userId || req.user?.id;
+    console.log('mentorIdMiddleware - extracted userId:', userId);
 
-  if (isOnline !== undefined) {
-    query.isOnline = isOnline === 'true';
-  }
-  if (skills) {
-    query.skills = { $in: Array.isArray(skills) ? skills : [skills] };
-  }
-  if (rating) {
-    query.rating = { $gte: parseFloat(rating) };
-  }
-  if (price) {
-    if (price.includes('-')) {
-      const [min, max] = price.split('-').map(Number);
-      query.price = { $gte: min, $lte: max };
-    } else {
-      query.price = { $gte: parseInt(price) };
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
     }
-  }
 
-  const mentors = await Mentor.find(query).sort({ createdAt: -1 });
-  res.json(mentors);
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ error: 'Invalid User ID format' });
+    }
+
+    const mentor = await Mentor.findOne({ userId });
+    if (!mentor) {
+      return res.status(403).json({ error: 'User is not a registered mentor' });
+    }
+
+    req.mentorId = mentor._id.toString();
+    console.log('mentorIdMiddleware - set req.mentorId:', req.mentorId);
+    next();
+  } else {
+    next();
+  }
+});
+
+// Apply middleware to all routes
+router.use(mentorIdMiddleware);
+
+// Check if user is a mentor
+router.get('/is-mentor/:userId', asyncHandler(async (req, res) => {
+  const userId = req.params.userId;
+  if (!mongoose.isValidObjectId(userId)) {
+    return res.status(400).json({ message: 'Invalid User ID format' });
+  }
+  const mentor = await Mentor.findOne({ userId });
+  res.json({ isMentor: !!mentor });
 }));
 
-router.get('/:mentorId', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findById(req.params.mentorId);
+// Get mentor by userId
+router.get('/mentors/:userId', asyncHandler(async (req, res) => {
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
   res.json(mentor);
 }));
 
-router.get('/shortName/:shortName', asyncHandler(async (req, res) => {
+router.get('/mentors/shortName/:shortName', asyncHandler(async (req, res) => {
   const mentor = await Mentor.findOne({ shortName: req.params.shortName });
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
@@ -59,7 +75,17 @@ router.post(
   '/',
   upload.single('profilePicture'),
   asyncHandler(async (req, res) => {
+    const userId = req.body.userId || req.user?.id;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    const existingMentor = await Mentor.findOne({ userId });
+    if (existingMentor) {
+      return res.status(400).json({ message: 'User is already a mentor' });
+    }
+
     const mentor = new Mentor({
+      userId, // Now required
       name: req.body.name,
       shortName: req.body.shortName,
       profileImage: req.file ? req.file.buffer.toString('base64') : null,
@@ -77,8 +103,8 @@ router.post(
   })
 );
 
-router.put('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+router.put('/mentors/:userId', asyncHandler(async (req, res) => {
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
@@ -95,8 +121,8 @@ router.put('/:shortName', asyncHandler(async (req, res) => {
   res.json(updatedMentor);
 }));
 
-router.delete('/:shortName', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+router.delete('/mentors/:userId', asyncHandler(async (req, res) => {
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
@@ -105,7 +131,7 @@ router.delete('/:shortName', asyncHandler(async (req, res) => {
   res.json({ message: 'Mentor deleted successfully' });
 }));
 
-router.post('/:shortName/reviews', asyncHandler(async (req, res) => {
+router.post('/mentors/:userId/reviews', asyncHandler(async (req, res) => {
   const { userId, name, rating, comment } = req.body;
 
   if (!mongoose.isValidObjectId(userId)) {
@@ -117,7 +143,7 @@ router.post('/:shortName/reviews', asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
@@ -136,8 +162,8 @@ router.post('/:shortName/reviews', asyncHandler(async (req, res) => {
   res.status(201).json(review);
 }));
 
-router.get('/:shortName/reviews', asyncHandler(async (req, res) => {
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+router.get('/mentors/:userId/reviews', asyncHandler(async (req, res) => {
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
@@ -145,7 +171,7 @@ router.get('/:shortName/reviews', asyncHandler(async (req, res) => {
   res.json(mentor.reviews);
 }));
 
-router.get('/:shortName/chat', asyncHandler(async (req, res) => {
+router.get('/mentors/:userId/chat', asyncHandler(async (req, res) => {
   const { userId } = req.query;
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
@@ -159,15 +185,15 @@ router.get('/:shortName/chat', asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const mentor = await Mentor.findOne({ shortName: req.params.shortName });
+  const mentor = await Mentor.findById(req.mentorId);
   if (!mentor) {
     return res.status(404).json({ message: 'Mentor not found' });
   }
 
   const messages = await Message.find({
     $or: [
-      { senderId: userId, receiverId: mentor._id },
-      { senderId: mentor._id, receiverId: userId },
+      { senderId: userId, receiverId: req.mentorId },
+      { senderId: req.mentorId, receiverId: userId },
     ],
   }).sort({ createdAt: 1 });
 
@@ -183,8 +209,8 @@ router.get('/:shortName/chat', asyncHandler(async (req, res) => {
   res.json(formattedMessages);
 }));
 
-router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
-  const { mentorId } = req.params;
+router.get('/mentormessages/:userId/users', asyncHandler(async (req, res) => {
+  const mentorId = req.mentorId;
 
   const mentor = await Mentor.findById(mentorId);
   if (!mentor) {
@@ -204,8 +230,6 @@ router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
           $cond: [{ $eq: ['$senderId', mentorId] }, '$receiverId', '$senderId'],
         },
       },
-
-
     },
     {
       $group: {
@@ -237,36 +261,50 @@ router.get('/:mentorId/messages/users', asyncHandler(async (req, res) => {
   res.json(userMessages);
 }));
 
+// Socket.IO setup (updated to use mentorId)
 module.exports.setupSocket = (io) => {
   const mentorNamespace = io.of('/mentor-chat');
   mentorNamespace.on('connection', (socket) => {
     console.log('A user connected to /mentor-chat:', socket.id);
 
-    socket.on('joinMentor', async (mentorId) => {
+    socket.on('joinMentor', async (userId, callback) => {
       try {
-        if (!mongoose.isValidObjectId(mentorId)) {
-          console.error('Invalid mentorId:', mentorId);
-          return;
+        if (!mongoose.isValidObjectId(userId)) {
+          console.error('Invalid userId:', userId);
+          return callback?.({ status: 'error', error: 'Invalid userId' });
         }
-        const mentor = await Mentor.findById(mentorId);
-        if (mentor) {
-          socket.join(mentorId);
-          mentor.isOnline = true;
-          await mentor.save();
-          mentorNamespace.emit('mentorStatus', { mentorId, isOnline: true });
+        const mentor = await Mentor.findOne({ userId });
+        if (!mentor) {
+          return callback?.({ status: 'error', error: 'Mentor not found' });
         }
+        socket.join(mentor._id.toString());
+        mentor.isOnline = true;
+        await mentor.save();
+        mentorNamespace.emit('mentorStatus', { mentorId: mentor._id, isOnline: true });
+        callback?.({ status: 'success' });
       } catch (error) {
         console.error('Error joining mentor:', error);
+        callback?.({ status: 'error', error: error.message });
       }
     });
 
-    socket.on('joinChat', ({ userId, mentorId }) => {
-      if (!mongoose.isValidObjectId(userId) || !mongoose.isValidObjectId(mentorId)) {
-        console.error('Invalid userId or mentorId:', { userId, mentorId });
-        return;
+    socket.on('joinChat', async ({ userId, mentorUserId }, callback) => {
+      try {
+        if (!mongoose.isValidObjectId(userId) || !mongoose.isValidObjectId(mentorUserId)) {
+          console.error('Invalid userId or mentorUserId:', { userId, mentorUserId });
+          return callback?.({ status: 'error', error: 'Invalid IDs' });
+        }
+        const mentor = await Mentor.findOne({ userId: mentorUserId });
+        if (!mentor) {
+          return callback?.({ status: 'error', error: 'Mentor not found' });
+        }
+        const room = [userId, mentor._id.toString()].sort().join('_');
+        socket.join(room);
+        callback?.({ status: 'success', room });
+      } catch (error) {
+        console.error('Error joining chat:', error);
+        callback?.({ status: 'error', error: error.message });
       }
-      const room = [userId, mentorId].sort().join('_');
-      socket.join(room);
     });
 
     socket.on('sendMessage', async ({ senderId, receiverId, content, tempId, debugId }, callback) => {
@@ -283,19 +321,15 @@ module.exports.setupSocket = (io) => {
           throw new Error('Sender or receiver not found');
         }
 
-        // Check for duplicate message
         const existingMessage = await Message.findOne({
           senderId,
           receiverId,
           content,
-          timestamp: { $gte: new Date(Date.now() - 1000) },
+          createdAt: { $gte: new Date(Date.now() - 1000) },
         });
         if (existingMessage) {
           console.log(`Duplicate message detected (debugId: ${debugId}) on /mentor-chat`);
-          if (typeof callback === 'function') {
-            callback({ status: 'error', error: 'Duplicate message' });
-          }
-          return;
+          return callback?.({ status: 'error', error: 'Duplicate message' });
         }
 
         const message = new Message({
@@ -318,14 +352,10 @@ module.exports.setupSocket = (io) => {
         const room = [senderId, receiverId].sort().join('_');
         mentorNamespace.to(room).emit('receiveMessage', messageData);
 
-        if (typeof callback === 'function') {
-          callback({ status: 'success', message: messageData });
-        }
+        callback?.({ status: 'success', message: messageData });
       } catch (error) {
         console.error(`Error sending message (debugId: ${debugId}) on /mentor-chat:`, error);
-        if (typeof callback === 'function') {
-          callback({ status: 'error', error: error.message });
-        }
+        callback?.({ status: 'error', error: error.message });
       }
     });
 

@@ -1,17 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev';
 
 export default function RegisterMentor() {
+  const { currentUser } = useSelector((state) => state.auth);
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [skills, setSkills] = useState([]);
   const [bio, setBio] = useState("");
   const [experience, setExperience] = useState("");
+  const [hourlyRate, setHourlyRate] = useState(""); // Added for price
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
@@ -23,43 +29,42 @@ export default function RegisterMentor() {
   const addSkill = () => {
     const newSkill = prompt("Enter new skill:");
     if (newSkill) {
-      setSkills([...skills, newSkill]);
+      setSkills([...skills, newSkill.trim()]);
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!currentUser?._id) {
+      setError("You must be logged in to register as a mentor.");
+      toast.error("Please log in to register as a mentor.");
+      return;
+    }
+
     const formData = new FormData();
+    formData.append("userId", currentUser._id); // Add userId
     formData.append("name", name);
     formData.append("shortName", shortName);
     if (profilePicture) formData.append("profilePicture", profilePicture);
     skills.forEach((skill) => formData.append("skills", skill));
     formData.append("bio", bio);
     formData.append("experience", experience);
-
-    console.log("FormData contents:", Object.fromEntries(formData)); // Log form data for debugging
+    formData.append("hourlyRate", hourlyRate);
 
     try {
-      const response = await fetch("https://literate-space-guide-9766rwg7rj5wh97qx-4000.app.github.dev/mentors", {
+      const response = await fetch(`${API_URL}/mentors`, {
         method: "POST",
         body: formData,
-        timeout: 10000, // 10 seconds timeout
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('Token')}`, // Add auth token
+        },
       });
 
-      const responseData = await response.text(); // Use text() first to avoid JSON parsing issues
-      console.log("Server response:", responseData);
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(`Failed to register mentor: ${response.status} - ${responseData || "No response"}`);
-      }
-
-      // Attempt to parse as JSON if it looks like JSON
-      let parsedData = {};
-      try {
-        parsedData = JSON.parse(responseData);
-      } catch (e) {
-        console.log("Response is not JSON:", responseData);
+        throw new Error(responseData.message || `Failed to register mentor: ${response.status}`);
       }
 
       setSuccess(true);
@@ -69,7 +74,9 @@ export default function RegisterMentor() {
       setSkills([]);
       setBio("");
       setExperience("");
+      setHourlyRate("");
       setError(null);
+      toast.success("Mentor registration successful!");
     } catch (err) {
       console.error("Error during submission:", err);
       if (err.name === "AbortError") {
@@ -79,6 +86,7 @@ export default function RegisterMentor() {
       } else {
         setError("Sorry, registration failed: " + err.message);
       }
+      toast.error(setError);
       setSuccess(false);
     }
   };
@@ -123,6 +131,7 @@ export default function RegisterMentor() {
                     src={URL.createObjectURL(profilePicture)}
                     alt="Profile Preview"
                   />
+                  <AvatarFallback>{name ? name[0] : "U"}</AvatarFallback>
                 </Avatar>
               )}
             </div>
@@ -135,7 +144,7 @@ export default function RegisterMentor() {
                   </span>
                 ))}
                 <button type="button" className="text-blue-600 hover:underline" onClick={addSkill}>
-                  +1
+                  + Add Skill
                 </button>
               </div>
             </div>
@@ -152,7 +161,7 @@ export default function RegisterMentor() {
               />
             </div>
             <div>
-              <label htmlFor="experience" className="block font-semibold text-gray-600 mb-1">Experience</label>
+              <label htmlFor="experience" className="block font-semibold text-gray-600 mb-1">Experience (Years)</label>
               <Input
                 id="experience"
                 type="number"
@@ -160,6 +169,18 @@ export default function RegisterMentor() {
                 onChange={(e) => setExperience(e.target.value)}
                 min="0"
                 placeholder="Enter years of experience"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="hourlyRate" className="block font-semibold text-gray-600 mb-1">Hourly Rate ($)</label>
+              <Input
+                id="hourlyRate"
+                type="number"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
+                min="0"
+                placeholder="Enter hourly rate"
                 required
               />
             </div>

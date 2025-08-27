@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useSelector, useDispatch } from "react-redux"
+import { shallowEqual, useSelector, useDispatch } from "react-redux";
+
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import {
   Search,
@@ -41,7 +42,17 @@ const Navbar = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
-  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } = useSelector((state) => state.auth)
+  const { loginStatus, currentUser, errorOccured, errorMessage, isPending } =
+  useSelector(
+    (state) => ({
+      loginStatus: state.auth.loginStatus,
+      currentUser: state.auth.currentUser,
+      errorOccured: state.auth.errorOccured,
+      errorMessage: state.auth.errorMessage,
+      isPending: state.auth.isPending,
+    }),
+    shallowEqual
+  );
 
   // Check screen size on mount and resize
   useEffect(() => {
@@ -78,6 +89,7 @@ const Navbar = () => {
     try {
       await dispatch(logoutUser()).unwrap()
       navigate("/login")
+      window.location.reload();
     } catch (error) {
       console.error("Logout Error:", error)
     }
@@ -113,7 +125,7 @@ const Navbar = () => {
       isDropdown: true,
       items: [
         { name: "Find Users", href: "/users/search", icon: UserSearch },
-        { name: "Mentors", href: "/mentors", icon: GraduationCap },
+        { name: "Mentors", href: "/mentorchat", icon: GraduationCap },
         { name: "Chat", href: "/chat", icon: MessageCircle },
       ],
     },
@@ -261,11 +273,15 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-1 text-white hover:bg-white/10 rounded-lg transition-colors">
                       <div className="w-8 h-8 bg-white text-green-600 rounded-full flex items-center justify-center font-semibold text-sm">
-                        {currentUser?.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
-                      </div>
-                      <span className="hidden sm:block text-sm font-medium max-w-20 truncate">
-                        {currentUser?.name || "User"}
-                      </span>
+  {currentUser?.name
+    ? currentUser.name.charAt(0).toUpperCase()
+    : <User className="h-4 w-4" />}
+</div>
+
+<span className="hidden sm:block text-sm font-medium max-w-20 truncate">
+  {currentUser?.name ?? "User"}
+</span>
+
                       <ChevronDown className="h-3 w-3" />
                     </button>
                   </DropdownMenuTrigger>
@@ -287,12 +303,7 @@ const Navbar = () => {
                         Edit Profile
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/mentorchat" className="flex items-center gap-2 cursor-pointer">
-                        <MessageSquare className="h-4 w-4" />
-                        Mentor Chat
-                      </Link>
-                    </DropdownMenuItem>
+                  
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="cursor-pointer text-red-600 hover:text-red-700 focus:text-red-700"

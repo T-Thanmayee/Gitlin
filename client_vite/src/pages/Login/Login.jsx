@@ -21,8 +21,10 @@ export default function LoginPage() {
     event.preventDefault();
     try {
       const result = await dispatch(loginUser({ email, password })).unwrap();
+      navigate('/');
+      window.location.reload();
       // If login is successful, loginUser sets sessionStorage and localStorage in the slice
-      navigate('/'); // Redirect to Home
+      // Redirect to Home
     } catch (error) {
       // Error is handled by the authSlice, and errorMessage is set
       console.error('Login Error:', error);

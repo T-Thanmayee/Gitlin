@@ -20,6 +20,7 @@ const mentorSchema = new mongoose.Schema({
   isOnline: { type: Boolean, default: false },
   socketId: { type: String },
   reviews: [reviewSchema],
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 // Calculate average rating before saving
